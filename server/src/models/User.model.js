@@ -43,6 +43,9 @@ const userSchema = new Schema(
                 ref: "Video",
             },
         ],
+        refreshToken: {
+            type: String, // stored hashed refresh token
+        },
     },
     { timestamps: true }
 );
@@ -60,7 +63,7 @@ userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password);
 };
 
-// Generate JWT access token
+// Generate short-lived Access Token
 userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
@@ -69,8 +72,19 @@ userSchema.methods.generateAccessToken = function () {
             name: this.name,
             role: this.role,
         },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRY || "7d" }
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1d" }
+    );
+};
+
+// Generate long-lived Refresh Token
+userSchema.methods.generateRefreshToken = function () {
+    return jwt.sign(
+        {
+            _id: this._id,
+        },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "10d" }
     );
 };
 
