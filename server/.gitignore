@@ -1,0 +1,18 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Temp uploads
+public/temp/*
+!public/temp/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
