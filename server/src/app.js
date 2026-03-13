@@ -33,7 +33,7 @@ app.use("/api/v1/progress", progressRouter);
 app.get("/api/v1/health", (req, res) => {
     res.status(200).json({
         success: true,
-        message: "🚀 Mentovara API is running!",
+        message: "Mentovara API is running!",
     });
 });
 
