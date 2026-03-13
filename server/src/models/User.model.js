@@ -4,9 +4,16 @@ import jwt from "jsonwebtoken";
 
 const userSchema = new Schema(
     {
-        name: {
+        fullName: {
             type: String,
-            required: [true, "Name is required"],
+            required: [true, "Full name is required"],
+            trim: true,
+        },
+        username: {
+            type: String,
+            required: [true, "Username is required"],
+            unique: true,
+            lowercase: true,
             trim: true,
             index: true,
         },
@@ -16,11 +23,12 @@ const userSchema = new Schema(
             unique: true,
             lowercase: true,
             trim: true,
+            index: true,
         },
         password: {
             type: String,
             required: [true, "Password is required"],
-            minlength: [6, "Password must be at least 6 characters"],
+            minlength: [8, "Password must be at least 8 characters"],
         },
         avatar: {
             type: String, // Cloudinary URL
@@ -51,11 +59,10 @@ const userSchema = new Schema(
 );
 
 // Hash password before saving
-userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) return;
 
     this.password = await bcrypt.hash(this.password, 10);
-    next();
 });
 
 // Compare password method
@@ -69,7 +76,7 @@ userSchema.methods.generateAccessToken = function () {
         {
             _id: this._id,
             email: this.email,
-            name: this.name,
+            username: this.username,
             role: this.role,
         },
         process.env.ACCESS_TOKEN_SECRET,
