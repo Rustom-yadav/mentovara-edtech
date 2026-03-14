@@ -35,8 +35,69 @@ const createCourse = asyncHandler(async (req, res) => {
 });
 
 const getCourses = asyncHandler(async (req, res) => {
-    // For now, return all published courses
-    const courses = await Course.find({ isPublished: true }).populate("instructor", "fullName avatar");
+    const { page = 1, limit = 10, query } = req.query;
+
+    const pipeline = [];
+
+    // Filter by query (title or description)
+    if (query) {
+        pipeline.push({
+            $match: {
+                $or: [
+                    { title: { $regex: query, $options: "i" } },
+                    { description: { $regex: query, $options: "i" } }
+                ]
+            }
+        });
+    }
+
+    // Only get published courses unless specified otherwise (for admin/instructor maybe later)
+    pipeline.push({
+        $match: {
+            isPublished: true
+        }
+    });
+
+    // Default sorting (newest first)
+    pipeline.push({
+        $sort: {
+            createdAt: -1
+        }
+    });
+
+    // Lookup to get instructor info since populate doesn't work directly with aggregatePaginate easily in simple way
+    pipeline.push(
+        {
+            $lookup: {
+                from: "users",
+                localField: "instructor",
+                foreignField: "_id",
+                as: "instructor",
+                pipeline: [
+                    {
+                        $project: {
+                            fullName: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields: {
+                instructor: {
+                    $first: "$instructor"
+                }
+            }
+        }
+    );
+
+    const options = {
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10)
+    };
+
+    const courses = await Course.aggregatePaginate(Course.aggregate(pipeline), options);
     
     return res.status(200).json(new ApiResponse(200, courses, "Courses fetched successfully"));
 });

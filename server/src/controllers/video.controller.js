@@ -5,7 +5,7 @@ import Video from "../models/Video.model.js";
 import Section from "../models/Section.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import fs from "fs";
-import { isValidObjectId } from "mongoose";
+
 
 const addVideo = asyncHandler(async (req, res) => {
     const { title, description, section } = req.body;
@@ -14,9 +14,12 @@ const addVideo = asyncHandler(async (req, res) => {
     if (!title || !section) {
         throw new ApiError(400, "Title and section ID are required");
     }
+    
+    const isValidSection = await Section.findById(section);
 
-    if (!isValidObjectId(section)) {
-        throw new ApiError(400, "Invalid Section ID format");
+    if (!isValidSection) {
+        if (req.file?.path) fs.unlinkSync(req.file.path);
+        throw new ApiError(404, "Section not found");
     }
 
     // 2. File check

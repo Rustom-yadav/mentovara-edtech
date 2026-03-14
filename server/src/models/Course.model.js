@@ -44,6 +44,9 @@ const courseSchema = new Schema(
     { timestamps: true }
 );
 
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+
 const Course = mongoose.model("Course", courseSchema);
+courseSchema.plugin(mongooseAggregatePaginate);
 
 export default Course;
