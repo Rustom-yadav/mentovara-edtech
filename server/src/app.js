@@ -21,12 +21,14 @@ app.use(cookieParser());
 import userRouter from "./routes/user.routes.js";
 import courseRouter from "./routes/course.routes.js";
 import videoRouter from "./routes/video.routes.js";
+import sectionRouter from "./routes/section.routes.js";
 import progressRouter from "./routes/progress.routes.js";
 
 // Routes Declaration
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/courses", courseRouter);
 app.use("/api/v1/videos", videoRouter);
+app.use("/api/v1/sections", sectionRouter);
 app.use("/api/v1/progress", progressRouter);
 
 // Health Check
