@@ -8,27 +8,27 @@ import fs from "fs";
 
 
 const addVideo = asyncHandler(async (req, res) => {
-    const { title, description, section } = req.body;
-
-    // 1. Validation improvements
-    if (!title || !section) {
-        throw new ApiError(400, "Title and section ID are required");
-    }
-    
-    const isValidSection = await Section.findById(section);
-
-    if (!isValidSection) {
-        if (req.file?.path) fs.unlinkSync(req.file.path);
-        throw new ApiError(404, "Section not found");
-    }
-
-    // 2. File check
     const videoLocalPath = req.file?.path;
-    if (!videoLocalPath) {
-        throw new ApiError(400, "Video file is required");
-    }
 
     try {
+        const { title, description, section } = req.body;
+
+        // 1. Validation improvements
+        if (!title || !section) {
+            throw new ApiError(400, "Title and section ID are required");
+        }
+        
+        const isValidSection = await Section.findById(section);
+
+        if (!isValidSection) {
+            throw new ApiError(404, "Section not found");
+        }
+
+        // 2. File check
+        if (!videoLocalPath) {
+            throw new ApiError(400, "Video file is required");
+        }
+
         // 3. Cloudinary Upload
         const videoUpload = await uploadOnCloudinary(videoLocalPath);
 
@@ -58,16 +58,19 @@ const addVideo = asyncHandler(async (req, res) => {
             throw new ApiError(404, "Section not found, video could not be linked");
         }
 
-        // 6. Cleanup: Remove local file after success
-        if (fs.existsSync(videoLocalPath)) fs.unlinkSync(videoLocalPath);
-
         return res.status(201).json(
             new ApiResponse(201, video, "Video added successfully")
         );
 
     } catch (error) {
         // 7. Critical: Cleanup local file even if something fails
-        if (fs.existsSync(videoLocalPath)) fs.unlinkSync(videoLocalPath);
+        if (videoLocalPath && fs.existsSync(videoLocalPath)) {
+            fs.unlinkSync(videoLocalPath);
+        }
+        
+        if (error instanceof ApiError) {
+            throw error;
+        }
         throw new ApiError(500, error?.message || "Internal Server Error during video upload");
     }
 });

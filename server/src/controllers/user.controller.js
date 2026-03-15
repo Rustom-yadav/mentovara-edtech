@@ -2,7 +2,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import User from "../models/User.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import fs from "fs";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -20,45 +21,52 @@ const generateAccessAndRefreshTokens = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { fullName, email, username, password, role } = req.body;
-
-    if ([fullName, email, username, password].some((field) => !field || field.trim() === "")) {
-        throw new ApiError(400, "All fields are required");
-    }
-
-    const existedUser = await User.findOne({
-        $or: [{ username }, { email }]
-    });
-
-    if (existedUser) {
-        throw new ApiError(409, "User with email or username already exists");
-    }
-
     let avatarLocalPath;
     if (req.files && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
         avatarLocalPath = req.files.avatar[0].path;
     }
 
-    let avatar;
-    if (avatarLocalPath) {
-        avatar = await uploadOnCloudinary(avatarLocalPath);
+    try {
+        const { fullName, email, username, password, role } = req.body;
+
+        if ([fullName, email, username, password].some((field) => !field || field.trim() === "")) {
+            throw new ApiError(400, "All fields are required");
+        }
+
+        const existedUser = await User.findOne({
+            $or: [{ username }, { email }]
+        });
+
+        if (existedUser) {
+            throw new ApiError(409, "User with email or username already exists");
+        }
+
+        let avatar;
+        if (avatarLocalPath) {
+            avatar = await uploadOnCloudinary(avatarLocalPath);
+        }
+
+        const user = await User.create({
+            fullName,
+            avatar: avatar?.url || "",
+            avatarPublicId: avatar?.public_id || "",
+            email,
+            password,
+            username: username,
+            role: role || "student"
+        });
+
+        const createdUser = user.toObject();
+        delete createdUser.password;
+        delete createdUser.refreshToken;
+
+        return res.status(201).json(new ApiResponse(201, createdUser, "User registered successfully"));
+    } catch (error) {
+        if (avatarLocalPath && fs.existsSync(avatarLocalPath)) {
+            fs.unlinkSync(avatarLocalPath);
+        }
+        throw error;
     }
-
-    const user = await User.create({
-        fullName,
-        avatar: avatar?.url || "",
-        avatarPublicId: avatar?.public_id || "",
-        email,
-        password,
-        username: username,
-        role: role || "student"
-    });
-
-    const createdUser = user.toObject();
-    delete createdUser.password;
-    delete createdUser.refreshToken;
-
-    return res.status(201).json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -138,33 +146,45 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 const updateProfile = asyncHandler(async (req, res) => {
-    const { fullName } = req.body;
     let avatarLocalPath;
 
     if (req.file) {
         avatarLocalPath = req.file.path;
     }
 
-    const updateData = {};
-    if (fullName) updateData.fullName = fullName;
+    try {
+        const { fullName } = req.body;
 
-    if (avatarLocalPath) {
-        const avatar = await uploadOnCloudinary(avatarLocalPath);
-        if (avatar && avatar.url) {
-            updateData.avatar = avatar.url;
-            updateData.avatarPublicId = avatar.public_id;
+        const updateData = {};
+        if (fullName) updateData.fullName = fullName;
+
+        if (avatarLocalPath) {
+            const avatar = await uploadOnCloudinary(avatarLocalPath);
+            if (avatar && avatar.url) {
+                const oldUser = await User.findById(req.user._id);
+                if (oldUser && oldUser.avatarPublicId) {
+                    await deleteFromCloudinary(oldUser.avatarPublicId);
+                }
+                updateData.avatar = avatar.url;
+                updateData.avatarPublicId = avatar.public_id;
+            }
         }
+
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set: updateData
+            },
+            { new: true }
+        );
+
+        return res.status(200).json(new ApiResponse(200, user, "Profile details updated successfully"));
+    } catch (error) {
+        if (avatarLocalPath && fs.existsSync(avatarLocalPath)) {
+            fs.unlinkSync(avatarLocalPath);
+        }
+        throw error;
     }
-
-    const user = await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $set: updateData
-        },
-        { new: true }
-    );
-
-    return res.status(200).json(new ApiResponse(200, user, "Profile details updated successfully"));
 });
 
 export { registerUser, loginUser, logoutUser, getCurrentUser, updateProfile };
