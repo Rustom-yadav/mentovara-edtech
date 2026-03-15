@@ -48,7 +48,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
         const user = await User.create({
             fullName,
-            avatar: avatar?.url || "",
+            avatar: avatar?.secure_url || "",
             avatarPublicId: avatar?.public_id || "",
             email,
             password,
@@ -160,12 +160,12 @@ const updateProfile = asyncHandler(async (req, res) => {
 
         if (avatarLocalPath) {
             const avatar = await uploadOnCloudinary(avatarLocalPath);
-            if (avatar && avatar.url) {
+            if (avatar && avatar.secure_url) {
                 const oldUser = await User.findById(req.user._id);
                 if (oldUser && oldUser.avatarPublicId) {
                     await deleteFromCloudinary(oldUser.avatarPublicId);
                 }
-                updateData.avatar = avatar.url;
+                updateData.avatar = avatar.secure_url;
                 updateData.avatarPublicId = avatar.public_id;
             }
         }

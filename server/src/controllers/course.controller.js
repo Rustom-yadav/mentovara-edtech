@@ -28,7 +28,7 @@ const createCourse = asyncHandler(async (req, res) => {
             title,
             description,
             price: price || 0,
-            thumbnail: thumbnail?.url || "",
+            thumbnail: thumbnail?.secure_url || "",
             thumbnailPublicId: thumbnail?.public_id || "",
             isPublished: isPublished || false,
             instructor: req.user._id
@@ -151,11 +151,11 @@ const updateCourse = asyncHandler(async (req, res) => {
 
         if (thumbnailLocalPath) {
             const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
-            if (thumbnail && thumbnail.url) {
+            if (thumbnail && thumbnail.secure_url) {
                 if (course.thumbnailPublicId) {
                     await deleteFromCloudinary(course.thumbnailPublicId);
                 }
-                updateData.thumbnail = thumbnail.url;
+                updateData.thumbnail = thumbnail.secure_url;
                 updateData.thumbnailPublicId = thumbnail.public_id;
             }
         }

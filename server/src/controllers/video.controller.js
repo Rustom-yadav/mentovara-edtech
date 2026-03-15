@@ -40,7 +40,7 @@ const addVideo = asyncHandler(async (req, res) => {
         const video = await Video.create({
             title,
             description: description || "",
-            videoUrl: videoUpload.url,
+            videoUrl: videoUpload.secure_url,
             publicId: videoUpload.public_id,
             duration: Math.round(videoUpload.duration || 0),
             section
