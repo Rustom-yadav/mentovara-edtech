@@ -56,6 +56,10 @@ const registerUser = asyncHandler(async (req, res) => {
             role: role || "student"
         });
 
+        if (!user) {
+            throw new ApiError(500, "Something went wrong while registering the user");
+        }
+
         const createdUser = user.toObject();
         delete createdUser.password;
         delete createdUser.refreshToken;
@@ -177,6 +181,10 @@ const updateProfile = asyncHandler(async (req, res) => {
             },
             { new: true }
         );
+
+        if (!user) {
+            throw new ApiError(500, "Something went wrong while updating the profile");
+        }
 
         return res.status(200).json(new ApiResponse(200, user, "Profile details updated successfully"));
     } catch (error) {

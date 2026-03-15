@@ -46,6 +46,10 @@ const addVideo = asyncHandler(async (req, res) => {
             section
         });
 
+        if (!video) {
+            throw new ApiError(500, "Something went wrong while saving the video record");
+        }
+
         // 5. Update Section (Directly push and check)
         const updatedSection = await Section.findByIdAndUpdate(
             section,

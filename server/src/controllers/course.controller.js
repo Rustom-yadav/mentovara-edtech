@@ -34,6 +34,10 @@ const createCourse = asyncHandler(async (req, res) => {
             instructor: req.user._id
         });
 
+        if (!course) {
+            throw new ApiError(500, "Something went wrong while creating the course");
+        }
+
         return res.status(201).json(new ApiResponse(201, course, "Course created successfully"));
     } catch (error) {
         if (thumbnailLocalPath && fs.existsSync(thumbnailLocalPath)) {
@@ -165,6 +169,10 @@ const updateCourse = asyncHandler(async (req, res) => {
             { $set: updateData },
             { new: true }
         );
+
+        if (!updatedCourse) {
+            throw new ApiError(500, "Something went wrong while updating the course");
+        }
 
         return res.status(200).json(new ApiResponse(200, updatedCourse, "Course updated successfully"));
     } catch (error) {
