@@ -1,8 +1,11 @@
+import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import Course from "../models/Course.model.js";
 import User from "../models/User.model.js";
+import Section from "../models/Section.model.js";
+import Video from "../models/Video.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import fs from "fs";
 
@@ -200,7 +203,49 @@ const deleteCourse = asyncHandler(async (req, res) => {
         await deleteFromCloudinary(course.thumbnailPublicId);
     }
 
-    await Course.findByIdAndDelete(courseId);
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        // Cascade delete: Find all sections of this course
+        const sections = await Section.find({ course: courseId }).session(session);
+
+        if (sections.length > 0) {
+            const sectionIds = sections.map((sec) => sec._id);
+
+            // Find all videos associated with these sections
+            const videos = await Video.find({ section: { $in: sectionIds } }).session(session);
+
+            if (videos.length > 0) {
+                // Delete all videos from Cloudinary concurrently
+                const deleteVideoPromises = videos.map((video) => {
+                    if (video.publicId) {
+                        return deleteFromCloudinary(video.publicId, "video");
+                    }
+                    return Promise.resolve();
+                });
+
+                await Promise.all(deleteVideoPromises);
+
+                // Delete video documents from DB using session
+                await Video.deleteMany({ section: { $in: sectionIds } }, { session });
+            }
+
+            // Delete section documents from DB using session
+            await Section.deleteMany({ course: courseId }, { session });
+        }
+
+        // Output course using session
+        await Course.findByIdAndDelete(courseId, { session });
+
+        await session.commitTransaction();
+    } catch (error) {
+        await session.abortTransaction();
+        throw new ApiError(500, "Failed to delete course due to an internal transaction error");
+    } finally {
+        session.endSession();
+    }
 
     return res.status(200).json(new ApiResponse(200, {}, "Course deleted successfully"));
 });
