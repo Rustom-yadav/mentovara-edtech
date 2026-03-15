@@ -258,17 +258,27 @@ const enrollInCourse = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Course not found");
     }
 
-    const user = await User.findById(req.user._id);
+    const updatedUser = await User.findOneAndUpdate(
+        {
+            _id: req.user._id,
+            enrolledCourses: { $ne: courseId }
+        },
+        {
+            $addToSet: { enrolledCourses: courseId }
+        },
+        { new: true }
+    );
 
-    if (user.enrolledCourses.includes(courseId)) {
+    if (!updatedUser) {
         throw new ApiError(400, "You are already enrolled in this course");
     }
 
-    user.enrolledCourses.push(courseId);
-    await user.save({ validateBeforeSave: false });
-
-    course.enrolledStudents += 1;
-    await course.save();
+    await Course.findByIdAndUpdate(
+        courseId,
+        {
+            $inc: { enrolledStudents: 1 }
+        }
+    );
 
     return res.status(200).json(new ApiResponse(200, {}, "Successfully enrolled in the course"));
 });
