@@ -53,7 +53,7 @@ const addVideo = asyncHandler(async (req, res) => {
         // 5. Update Section (Directly push and check)
         const updatedSection = await Section.findByIdAndUpdate(
             section,
-            { $push: { videos: video._id } },
+            { $addToSet: { videos: video._id } },
             { new: true }
         );
 

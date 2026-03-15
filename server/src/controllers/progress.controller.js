@@ -34,25 +34,16 @@ const markVideoComplete = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Course ID and Video ID are required");
     }
 
-    let progress = await Progress.findOne({
-        user: req.user._id,
-        course: courseId
-    });
-
-    if (!progress) {
-        // Create new progress document if it doesn't exist
-        progress = await Progress.create({
+    const progress = await Progress.findOneAndUpdate(
+        {
             user: req.user._id,
-            course: courseId,
-            completedVideos: [videoId]
-        });
-    } else {
-        // Add video to completedVideos if not already present
-        if (!progress.completedVideos.includes(videoId)) {
-            progress.completedVideos.push(videoId);
-            await progress.save();
-        }
-    }
+            course: courseId
+        },
+        {
+            $addToSet: { completedVideos: videoId }
+        },
+        { new: true, upsert: true } // Upsert handles creating it if it doesn't exist
+    );
 
     return res.status(200).json(new ApiResponse(200, progress, "Video marked as complete"));
 });
