@@ -27,6 +27,7 @@ const createCourse = asyncHandler(async (req, res) => {
         description,
         price: price || 0,
         thumbnail: thumbnail?.url || "",
+        thumbnailPublicId: thumbnail?.public_id || "",
         isPublished: isPublished || false,
         instructor: req.user._id
     });
@@ -93,8 +94,8 @@ const getCourses = asyncHandler(async (req, res) => {
     );
 
     const options = {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10)
+        page: Math.max(1, parseInt(page, 10) || 1),
+        limit: Math.max(1, Math.min(100, parseInt(limit, 10) || 10))
     };
 
     const courses = await Course.aggregatePaginate(Course.aggregate(pipeline), options);
@@ -143,6 +144,7 @@ const updateCourse = asyncHandler(async (req, res) => {
         const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
         if (thumbnail && thumbnail.url) {
             updateData.thumbnail = thumbnail.url;
+            updateData.thumbnailPublicId = thumbnail.public_id;
         }
     }
 

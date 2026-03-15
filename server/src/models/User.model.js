@@ -35,6 +35,10 @@ const userSchema = new Schema(
             type: String, // Cloudinary URL
             default: "",
         },
+        avatarPublicId: {
+            type: String, // Cloudinary public ID
+            default: "",
+        },
         role: {
             type: String,
             enum: ["student", "instructor"],

@@ -16,6 +16,10 @@ const courseSchema = new Schema(
             type: String, // Cloudinary URL
             default: "",
         },
+        thumbnailPublicId: {
+            type: String, // Cloudinary public ID
+            default: "",
+        },
         price: {
             type: Number,
             default: 0,

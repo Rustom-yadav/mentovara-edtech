@@ -47,6 +47,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const user = await User.create({
         fullName,
         avatar: avatar?.url || "",
+        avatarPublicId: avatar?.public_id || "",
         email,
         password,
         username: username,
@@ -149,7 +150,10 @@ const updateProfile = asyncHandler(async (req, res) => {
 
     if (avatarLocalPath) {
         const avatar = await uploadOnCloudinary(avatarLocalPath);
-        if (avatar && avatar.url) updateData.avatar = avatar.url;
+        if (avatar && avatar.url) {
+            updateData.avatar = avatar.url;
+            updateData.avatarPublicId = avatar.public_id;
+        }
     }
 
     const user = await User.findByIdAndUpdate(
