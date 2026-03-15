@@ -115,6 +115,10 @@ const getCourses = asyncHandler(async (req, res) => {
 
     const courses = await Course.aggregatePaginate(Course.aggregate(pipeline), options);
     
+    if (!courses || courses.docs.length === 0) {
+        throw new ApiError(404, "No courses found matching your criteria");
+    }
+
     return res.status(200).json(new ApiResponse(200, courses, "Courses fetched successfully"));
 });
 
