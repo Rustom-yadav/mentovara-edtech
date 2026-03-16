@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="section-container flex flex-col items-center justify-between gap-4 sm:flex-row">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/logo.png"
+            src="/temp/logo.png"
             alt="Mentovara"
             width={24}
             height={24}

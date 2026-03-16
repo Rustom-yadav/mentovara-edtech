@@ -39,7 +39,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
           <Image
-            src="/logo.png"
+            src="/temp/logo.png"
             alt="Mentovara"
             width={32}
             height={32}

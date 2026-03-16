@@ -44,7 +44,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center text-center">
           <Link href="/" className="mb-6 flex items-center gap-2">
             <Image
-              src="/logo.png"
+              src="/temp/logo.png"
               alt="Mentovara"
               width={40}
               height={40}

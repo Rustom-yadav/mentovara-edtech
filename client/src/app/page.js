@@ -191,7 +191,7 @@ export default function HomePage() {
         <div className="section-container flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
             <Image
-              src="/logo.png"
+              src="/temp/logo.png"
               alt="Mentovara"
               width={24}
               height={24}
