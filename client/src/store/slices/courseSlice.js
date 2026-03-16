@@ -3,6 +3,7 @@ import api from "@/services/api";
 import { ENDPOINTS } from "@/services/endpoints";
 
 // Fetch published courses (paginated + searchable)
+// Backend throws 404 when no courses match — we return empty pagination
 export const fetchCourses = createAsyncThunk(
   "course/fetchCourses",
   async ({ page = 1, limit = 12, query = "" } = {}, { rejectWithValue }) => {
@@ -12,6 +13,9 @@ export const fetchCourses = createAsyncThunk(
       const res = await api.get(`${ENDPOINTS.COURSES}?${params}`);
       return res.data?.data;
     } catch (err) {
+      if (err?.response?.status === 404) {
+        return { docs: [], page: 1, totalPages: 0, totalDocs: 0, hasNextPage: false, hasPrevPage: false };
+      }
       return rejectWithValue(
         err.response?.data?.message || "Failed to fetch courses"
       );
@@ -105,13 +109,15 @@ export const enrollInCourse = createAsyncThunk(
 );
 
 // Fetch sections (with populated videos) for a course
+// Backend throws 404 when no sections exist — we treat that as an empty array
 export const fetchCourseSections = createAsyncThunk(
   "course/fetchCourseSections",
   async (courseId, { rejectWithValue }) => {
     try {
       const res = await api.get(ENDPOINTS.COURSE_SECTIONS(courseId));
-      return res.data?.data;
+      return res.data?.data || [];
     } catch (err) {
+      if (err?.response?.status === 404) return [];
       return rejectWithValue(
         err.response?.data?.message || "Failed to fetch sections"
       );

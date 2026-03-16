@@ -18,24 +18,25 @@ export function useAuth() {
   const router = useRouter();
   const { user, isAuthenticated, loading } = useSelector((s) => s.auth);
 
-  // Hydrate session on app boot
+  // Hydrate session from cookie on app boot
   const checkAuth = useCallback(async () => {
     try {
       dispatch(setLoading(true));
       const res = await api.get(ENDPOINTS.PROFILE);
-      dispatch(setUser(res.data?.data || res.data));
+      dispatch(setUser(res.data?.data));
     } catch {
       dispatch(logoutAction());
     }
   }, [dispatch]);
 
-  // Login
+  // Login — backend sets accessToken + refreshToken cookies
+  // Response shape: { statusCode, data: { user, accessToken, refreshToken }, message }
   const handleLogin = useCallback(
     async (credentials) => {
       try {
         dispatch(setLoading(true));
         const res = await api.post(ENDPOINTS.LOGIN, credentials);
-        const userData = res.data?.data?.user || res.data?.data || res.data;
+        const userData = res.data?.data?.user;
         dispatch(loginAction(userData));
         toast.success("Logged in successfully!");
         router.push("/dashboard");
@@ -51,18 +52,32 @@ export function useAuth() {
     [dispatch, router]
   );
 
-  // Register
+  // Register — backend does NOT set cookies, so we auto-login after register
+  // Register response: { statusCode, data: createdUser, message }
   const handleRegister = useCallback(
     async (formData) => {
       try {
         dispatch(setLoading(true));
-        const res = await api.post(ENDPOINTS.REGISTER, formData, {
+
+        // Step 1: Register the user
+        await api.post(ENDPOINTS.REGISTER, formData, {
           headers:
             formData instanceof FormData
               ? { "Content-Type": "multipart/form-data" }
               : {},
         });
-        const userData = res.data?.data || res.data;
+
+        // Step 2: Auto-login since register doesn't set cookies
+        const loginCredentials =
+          formData instanceof FormData
+            ? {
+                email: formData.get("email"),
+                password: formData.get("password"),
+              }
+            : { email: formData.email, password: formData.password };
+
+        const loginRes = await api.post(ENDPOINTS.LOGIN, loginCredentials);
+        const userData = loginRes.data?.data?.user;
         dispatch(loginAction(userData));
         toast.success("Account created successfully!");
         router.push("/dashboard");
@@ -79,7 +94,7 @@ export function useAuth() {
     [dispatch, router]
   );
 
-  // Logout
+  // Logout — backend clears accessToken + refreshToken cookies
   const handleLogout = useCallback(async () => {
     try {
       await api.post(ENDPOINTS.LOGOUT);
@@ -92,6 +107,16 @@ export function useAuth() {
     }
   }, [dispatch, router]);
 
+  // Refresh user data from backend (e.g., after enrolling in a course)
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await api.get(ENDPOINTS.PROFILE);
+      dispatch(setUser(res.data?.data));
+    } catch {
+      // silently fail
+    }
+  }, [dispatch]);
+
   return {
     user,
     isAuthenticated,
@@ -102,5 +127,6 @@ export function useAuth() {
     handleLogin,
     handleRegister,
     handleLogout,
+    refreshUser,
   };
 }

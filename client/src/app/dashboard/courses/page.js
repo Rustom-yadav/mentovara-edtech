@@ -18,17 +18,21 @@ export default function InstructorCoursesPage() {
   useEffect(() => {
     async function loadMyCourses() {
       try {
-        // Fetch all courses and filter by current instructor
         const res = await api.get(ENDPOINTS.COURSES, {
           params: { page: 1, limit: 100 },
         });
         const allCourses = res.data?.data?.docs || [];
         const mine = allCourses.filter(
-          (c) => c.instructor?._id === user?._id || c.instructor === user?._id
+          (c) =>
+            c.instructor?._id === user?._id || c.instructor === user?._id
         );
         setCourses(mine);
-      } catch {
-        toast.error("Failed to load your courses");
+      } catch (err) {
+        // Backend returns 404 when no published courses exist — that's OK
+        if (err?.response?.status !== 404) {
+          toast.error("Failed to load your courses");
+        }
+        setCourses([]);
       } finally {
         setLoading(false);
       }

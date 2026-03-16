@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -18,34 +17,50 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  fetchCourseById,
-  fetchCourseSections,
-  enrollInCourse,
-  clearCurrentCourse,
-} from "@/store/slices/courseSlice";
+import api from "@/services/api";
+import { ENDPOINTS } from "@/services/endpoints";
 
 export default function CourseDetailPage() {
   const { courseId } = useParams();
   const router = useRouter();
-  const dispatch = useDispatch();
-  const { currentCourse: course, sections, isLoading, error } = useSelector(
-    (s) => s.course
-  );
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refreshUser } = useAuth();
+
+  const [course, setCourse] = useState(null);
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
-    if (courseId) {
-      dispatch(fetchCourseById(courseId));
-      dispatch(fetchCourseSections(courseId));
+    async function load() {
+      setLoading(true);
+      try {
+        // getCourseById is public — no auth needed
+        const courseRes = await api.get(ENDPOINTS.COURSE_BY_ID(courseId));
+        setCourse(courseRes.data?.data);
+
+        // getCourseSections requires JWT — only fetch if logged in
+        if (isAuthenticated) {
+          try {
+            const secRes = await api.get(ENDPOINTS.COURSE_SECTIONS(courseId));
+            setSections(secRes.data?.data || []);
+          } catch {
+            setSections([]);
+          }
+        }
+      } catch {
+        setCourse(null);
+      } finally {
+        setLoading(false);
+      }
     }
-    return () => dispatch(clearCurrentCourse());
-  }, [courseId, dispatch]);
+    if (courseId) load();
+  }, [courseId, isAuthenticated]);
 
   const isEnrolled = user?.enrolledCourses?.includes(courseId);
-  const isOwner = course?.instructor?._id === user?._id;
+  const isOwner =
+    course?.instructor?._id === user?._id ||
+    course?.instructor === user?._id;
 
-  // Total videos & duration across all sections
   const totalVideos = sections.reduce(
     (sum, sec) => sum + (sec.videos?.length || 0),
     0
@@ -69,15 +84,33 @@ export default function CourseDetailPage() {
       router.push(`/auth/login?from=/courses/${courseId}`);
       return;
     }
-    const result = await dispatch(enrollInCourse(courseId));
-    if (enrollInCourse.fulfilled.match(result)) {
+    setEnrolling(true);
+    try {
+      await api.post(ENDPOINTS.ENROLL(courseId));
       toast.success("Enrolled successfully!");
-    } else {
-      toast.error(result.payload || "Failed to enroll");
+      // Refresh user so enrolledCourses updates in Redux
+      await refreshUser();
+      // Increment local count
+      setCourse((prev) =>
+        prev
+          ? { ...prev, enrolledStudents: (prev.enrolledStudents || 0) + 1 }
+          : prev
+      );
+      // Now fetch sections since user is enrolled
+      try {
+        const secRes = await api.get(ENDPOINTS.COURSE_SECTIONS(courseId));
+        setSections(secRes.data?.data || []);
+      } catch {
+        // sections might not exist yet
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to enroll");
+    } finally {
+      setEnrolling(false);
     }
   }
 
-  if (isLoading && !course) {
+  if (loading) {
     return (
       <div className="section-container flex items-center justify-center py-32">
         <Loader2 className="size-8 animate-spin text-primary" />
@@ -85,7 +118,7 @@ export default function CourseDetailPage() {
     );
   }
 
-  if (error && !course) {
+  if (!course) {
     return (
       <div className="section-container flex flex-col items-center gap-4 py-32 text-center">
         <BookOpen className="size-12 text-muted-foreground/40" />
@@ -99,7 +132,8 @@ export default function CourseDetailPage() {
     );
   }
 
-  if (!course) return null;
+  // Find the first video for "Continue Learning" button
+  const firstVideo = sections[0]?.videos?.[0];
 
   return (
     <div>
@@ -150,16 +184,20 @@ export default function CourseDetailPage() {
                   <Users className="size-4" />
                   {course.enrolledStudents || 0} students
                 </div>
-                <Separator orientation="vertical" className="!h-4" />
-                <div className="flex items-center gap-1">
-                  <PlayCircle className="size-4" />
-                  {totalVideos} lectures
-                </div>
-                <Separator orientation="vertical" className="!h-4" />
-                <div className="flex items-center gap-1">
-                  <Clock className="size-4" />
-                  {formatDuration(totalDuration)}
-                </div>
+                {isAuthenticated && totalVideos > 0 && (
+                  <>
+                    <Separator orientation="vertical" className="!h-4" />
+                    <div className="flex items-center gap-1">
+                      <PlayCircle className="size-4" />
+                      {totalVideos} lectures
+                    </div>
+                    <Separator orientation="vertical" className="!h-4" />
+                    <div className="flex items-center gap-1">
+                      <Clock className="size-4" />
+                      {formatDuration(totalDuration)}
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* CTA */}
@@ -171,8 +209,8 @@ export default function CourseDetailPage() {
                 ) : isEnrolled ? (
                   <Link
                     href={
-                      sections[0]?.videos?.[0]
-                        ? `/watch/${courseId}/${sections[0].videos[0]._id}`
+                      firstVideo
+                        ? `/watch/${courseId}/${firstVideo._id}`
                         : "#"
                     }
                   >
@@ -185,13 +223,14 @@ export default function CourseDetailPage() {
                   <Button
                     size="lg"
                     onClick={handleEnroll}
-                    disabled={isLoading}
+                    disabled={enrolling}
                   >
-                    {isLoading ? (
+                    {enrolling ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : (
                       <>
-                        Enroll {course.price > 0 ? `— ₹${course.price}` : "Free"}
+                        Enroll{" "}
+                        {course.price > 0 ? `— ₹${course.price}` : "Free"}
                       </>
                     )}
                   </Button>
@@ -225,67 +264,82 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      {/* Curriculum */}
+      {/* Curriculum — only visible when authenticated */}
       <div className="section-container py-10">
         <h2 className="text-xl font-bold">Course Curriculum</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {sections.length} section{sections.length !== 1 && "s"} &middot;{" "}
-          {totalVideos} lecture{totalVideos !== 1 && "s"} &middot;{" "}
-          {formatDuration(totalDuration)} total
-        </p>
 
-        {sections.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center text-muted-foreground">
+        {!isAuthenticated ? (
+          <div className="mt-6 rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center">
+            <p className="font-medium">Log in to see the full curriculum</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Enroll in this course to access all lectures and track your
+              progress.
+            </p>
+            <Link href={`/auth/login?from=/courses/${courseId}`} className="mt-4 inline-block">
+              <Button variant="outline" size="sm">
+                Log in
+              </Button>
+            </Link>
+          </div>
+        ) : sections.length === 0 ? (
+          <div className="mt-6 rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center text-muted-foreground">
             No sections added to this course yet.
           </div>
         ) : (
-          <div className="mt-6 space-y-3">
-            {sections.map((section, sIdx) => (
-              <details
-                key={section._id}
-                className="group rounded-xl border border-border bg-card"
-                open={sIdx === 0}
-              >
-                <summary className="flex cursor-pointer items-center justify-between px-5 py-4 font-medium">
-                  <span>
-                    {sIdx + 1}. {section.title}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {section.videos?.length || 0} lectures
-                  </span>
-                </summary>
-                <div className="border-t border-border">
-                  {section.videos && section.videos.length > 0 ? (
-                    section.videos.map((video, vIdx) => (
-                      <div
-                        key={video._id}
-                        className="flex items-center gap-3 px-5 py-3 text-sm hover:bg-muted/50 transition-colors"
-                      >
-                        <PlayCircle className="size-4 shrink-0 text-muted-foreground" />
-                        <span className="flex-1">
-                          {sIdx + 1}.{vIdx + 1} {video.title}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDuration(video.duration)}
-                        </span>
-                        {isEnrolled && (
-                          <Link href={`/watch/${courseId}/${video._id}`}>
-                            <Button variant="ghost" size="xs">
-                              Watch
-                            </Button>
-                          </Link>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="px-5 py-3 text-sm text-muted-foreground">
-                      No lectures in this section yet.
-                    </p>
-                  )}
-                </div>
-              </details>
-            ))}
-          </div>
+          <>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {sections.length} section{sections.length !== 1 && "s"} &middot;{" "}
+              {totalVideos} lecture{totalVideos !== 1 && "s"} &middot;{" "}
+              {formatDuration(totalDuration)} total
+            </p>
+            <div className="mt-6 space-y-3">
+              {sections.map((section, sIdx) => (
+                <details
+                  key={section._id}
+                  className="group rounded-xl border border-border bg-card"
+                  open={sIdx === 0}
+                >
+                  <summary className="flex cursor-pointer items-center justify-between px-5 py-4 font-medium">
+                    <span>
+                      {sIdx + 1}. {section.title}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {section.videos?.length || 0} lectures
+                    </span>
+                  </summary>
+                  <div className="border-t border-border">
+                    {section.videos && section.videos.length > 0 ? (
+                      section.videos.map((video, vIdx) => (
+                        <div
+                          key={video._id}
+                          className="flex items-center gap-3 px-5 py-3 text-sm hover:bg-muted/50 transition-colors"
+                        >
+                          <PlayCircle className="size-4 shrink-0 text-muted-foreground" />
+                          <span className="flex-1">
+                            {sIdx + 1}.{vIdx + 1} {video.title}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDuration(video.duration)}
+                          </span>
+                          {isEnrolled && (
+                            <Link href={`/watch/${courseId}/${video._id}`}>
+                              <Button variant="ghost" size="xs">
+                                Watch
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="px-5 py-3 text-sm text-muted-foreground">
+                        No lectures in this section yet.
+                      </p>
+                    )}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

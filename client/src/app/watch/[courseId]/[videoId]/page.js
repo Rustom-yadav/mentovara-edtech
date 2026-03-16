@@ -33,7 +33,9 @@ export default function WatchPage() {
     try {
       const [videoRes, sectionsRes, progressRes] = await Promise.all([
         api.get(ENDPOINTS.VIDEO_BY_ID(videoId)),
-        api.get(ENDPOINTS.COURSE_SECTIONS(courseId)),
+        api.get(ENDPOINTS.COURSE_SECTIONS(courseId)).catch(() => ({
+          data: { data: [] },
+        })),
         api.get(ENDPOINTS.PROGRESS(courseId)).catch(() => ({
           data: { data: { completedVideos: [] } },
         })),
