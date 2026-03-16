@@ -46,8 +46,8 @@ export default function LoginPage() {
             <Image
               src="/temp/logo.png"
               alt="Mentovara"
-              width={40}
-              height={40}
+              width={80}
+              height={80}
               className="rounded-xl"
             />
             <span className="text-xl font-bold gradient-text">Mentovara</span>

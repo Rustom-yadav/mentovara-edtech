@@ -41,8 +41,8 @@ export default function Navbar() {
           <Image
             src="/temp/logo.png"
             alt="Mentovara"
-            width={32}
-            height={32}
+            width={72}
+            height={72}
             className="rounded-lg"
           />
           <span className="text-lg font-bold tracking-tight gradient-text">

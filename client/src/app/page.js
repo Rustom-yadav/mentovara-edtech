@@ -186,24 +186,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===================== FOOTER ===================== */}
-      <footer className="border-t border-border py-8">
-        <div className="section-container flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/temp/logo.png"
-              alt="Mentovara"
-              width={24}
-              height={24}
-              className="rounded-md"
-            />
-            <span className="text-sm font-semibold">Mentovara</span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} Mentovara. Built by Rustom.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
