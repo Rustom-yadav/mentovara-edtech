@@ -1,46 +1,55 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/services/api";
+import { ENDPOINTS } from "@/services/endpoints";
 
-// ========== ASYNC THUNKS ==========
-
-// Get all courses (public — paginated, searchable)
-export const getCourses = createAsyncThunk(
-  "course/getCourses",
-  async ({ page = 1, limit = 10, query = "" } = {}, { rejectWithValue }) => {
+// Fetch published courses (paginated + searchable)
+export const fetchCourses = createAsyncThunk(
+  "course/fetchCourses",
+  async ({ page = 1, limit = 12, query = "" } = {}, { rejectWithValue }) => {
     try {
       const params = new URLSearchParams({ page, limit });
       if (query) params.append("query", query);
-
-      const response = await api.get(`/courses?${params.toString()}`);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch courses");
+      const res = await api.get(`${ENDPOINTS.COURSES}?${params}`);
+      return res.data?.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch courses"
+      );
     }
   }
 );
 
-// Get a single course by ID
-export const getCourseById = createAsyncThunk(
-  "course/getCourseById",
+// Fetch a single course by ID (includes instructor + sections)
+export const fetchCourseById = createAsyncThunk(
+  "course/fetchCourseById",
   async (courseId, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/courses/${courseId}`);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch course");
+      const res = await api.get(ENDPOINTS.COURSE_BY_ID(courseId));
+      return res.data?.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch course"
+      );
     }
   }
 );
 
-// Create a course (instructor only)
+// Create a course (instructor only, supports FormData for thumbnail)
 export const createCourse = createAsyncThunk(
   "course/createCourse",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await api.post("/courses", formData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to create course");
+      const res = await api.post(ENDPOINTS.COURSES, formData, {
+        headers:
+          formData instanceof FormData
+            ? { "Content-Type": "multipart/form-data" }
+            : {},
+      });
+      return res.data?.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to create course"
+      );
     }
   }
 );
@@ -50,23 +59,32 @@ export const updateCourse = createAsyncThunk(
   "course/updateCourse",
   async ({ courseId, formData }, { rejectWithValue }) => {
     try {
-      const response = await api.patch(`/courses/${courseId}`, formData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to update course");
+      const res = await api.patch(ENDPOINTS.COURSE_BY_ID(courseId), formData, {
+        headers:
+          formData instanceof FormData
+            ? { "Content-Type": "multipart/form-data" }
+            : {},
+      });
+      return res.data?.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to update course"
+      );
     }
   }
 );
 
-// Delete a course (instructor only)
+// Delete a course (instructor only, cascade deletes sections + videos)
 export const deleteCourse = createAsyncThunk(
   "course/deleteCourse",
   async (courseId, { rejectWithValue }) => {
     try {
-      await api.delete(`/courses/${courseId}`);
+      await api.delete(ENDPOINTS.COURSE_BY_ID(courseId));
       return courseId;
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to delete course");
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to delete course"
+      );
     }
   }
 );
@@ -76,19 +94,35 @@ export const enrollInCourse = createAsyncThunk(
   "course/enrollInCourse",
   async (courseId, { rejectWithValue }) => {
     try {
-      const response = await api.post(`/courses/${courseId}/enroll`);
-      return { courseId, message: response.message };
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to enroll");
+      await api.post(ENDPOINTS.ENROLL(courseId));
+      return courseId;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to enroll"
+      );
     }
   }
 );
 
-// ========== SLICE ==========
+// Fetch sections (with populated videos) for a course
+export const fetchCourseSections = createAsyncThunk(
+  "course/fetchCourseSections",
+  async (courseId, { rejectWithValue }) => {
+    try {
+      const res = await api.get(ENDPOINTS.COURSE_SECTIONS(courseId));
+      return res.data?.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch sections"
+      );
+    }
+  }
+);
 
 const initialState = {
-  courses: [],          // Course listing
-  currentCourse: null,  // Single course details
+  courses: [],
+  currentCourse: null,
+  sections: [],
   pagination: {
     page: 1,
     totalPages: 1,
@@ -104,112 +138,103 @@ const courseSlice = createSlice({
   name: "course",
   initialState,
   reducers: {
-    clearCourseError: (state) => {
+    clearCourseError(state) {
       state.error = null;
     },
-    clearCurrentCourse: (state) => {
+    clearCurrentCourse(state) {
       state.currentCourse = null;
+      state.sections = [];
     },
   },
   extraReducers: (builder) => {
     builder
-      // ===== Get Courses =====
-      .addCase(getCourses.pending, (state) => {
+      // Fetch Courses
+      .addCase(fetchCourses.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(getCourses.fulfilled, (state, action) => {
+      .addCase(fetchCourses.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.courses = action.payload.docs;
+        state.courses = action.payload?.docs || [];
         state.pagination = {
-          page: action.payload.page,
-          totalPages: action.payload.totalPages,
-          totalDocs: action.payload.totalDocs,
-          hasNextPage: action.payload.hasNextPage,
-          hasPrevPage: action.payload.hasPrevPage,
+          page: action.payload?.page || 1,
+          totalPages: action.payload?.totalPages || 1,
+          totalDocs: action.payload?.totalDocs || 0,
+          hasNextPage: action.payload?.hasNextPage || false,
+          hasPrevPage: action.payload?.hasPrevPage || false,
         };
       })
-      .addCase(getCourses.rejected, (state, action) => {
+      .addCase(fetchCourses.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        state.courses = [];
       })
 
-      // ===== Get Course By ID =====
-      .addCase(getCourseById.pending, (state) => {
+      // Fetch Course By ID
+      .addCase(fetchCourseById.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(getCourseById.fulfilled, (state, action) => {
+      .addCase(fetchCourseById.fulfilled, (state, action) => {
         state.isLoading = false;
         state.currentCourse = action.payload;
       })
-      .addCase(getCourseById.rejected, (state, action) => {
+      .addCase(fetchCourseById.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
 
-      // ===== Create Course =====
+      // Create Course
       .addCase(createCourse.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(createCourse.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.courses.unshift(action.payload);
+        if (action.payload) state.courses.unshift(action.payload);
       })
       .addCase(createCourse.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
 
-      // ===== Update Course =====
-      .addCase(updateCourse.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
+      // Update Course
       .addCase(updateCourse.fulfilled, (state, action) => {
         state.isLoading = false;
         state.currentCourse = action.payload;
-        const index = state.courses.findIndex(
-          (c) => c._id === action.payload._id
+        const idx = state.courses.findIndex(
+          (c) => c._id === action.payload?._id
         );
-        if (index !== -1) {
-          state.courses[index] = action.payload;
-        }
-      })
-      .addCase(updateCourse.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
+        if (idx !== -1) state.courses[idx] = action.payload;
       })
 
-      // ===== Delete Course =====
-      .addCase(deleteCourse.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
+      // Delete Course
       .addCase(deleteCourse.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.courses = state.courses.filter(
-          (c) => c._id !== action.payload
-        );
+        state.courses = state.courses.filter((c) => c._id !== action.payload);
         if (state.currentCourse?._id === action.payload) {
           state.currentCourse = null;
         }
       })
-      .addCase(deleteCourse.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      })
 
-      // ===== Enroll =====
-      .addCase(enrollInCourse.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
+      // Enroll
       .addCase(enrollInCourse.fulfilled, (state) => {
         state.isLoading = false;
+        if (state.currentCourse) {
+          state.currentCourse.enrolledStudents =
+            (state.currentCourse.enrolledStudents || 0) + 1;
+        }
       })
-      .addCase(enrollInCourse.rejected, (state, action) => {
+
+      // Fetch Sections
+      .addCase(fetchCourseSections.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchCourseSections.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.sections = action.payload || [];
+      })
+      .addCase(fetchCourseSections.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       });

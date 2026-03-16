@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import api from "@/services/api";
+import { ENDPOINTS } from "@/services/endpoints";
 import {
   login as loginAction,
   logout as logoutAction,
@@ -12,34 +13,28 @@ import {
   setLoading,
 } from "@/store/slices/authSlice";
 
-/**
- * Central auth hook — exposes state + actions for login, register, logout, etc.
- * Usage: const { user, isAuthenticated, handleLogin, ... } = useAuth();
- */
 export function useAuth() {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { user, isAuthenticated, loading } = useSelector(
-    (state) => state.auth
-  );
+  const { user, isAuthenticated, loading } = useSelector((s) => s.auth);
 
-  // Fetch current session from backend on app boot
+  // Hydrate session on app boot
   const checkAuth = useCallback(async () => {
     try {
       dispatch(setLoading(true));
-      const res = await api.get("/users/profile");
+      const res = await api.get(ENDPOINTS.PROFILE);
       dispatch(setUser(res.data?.data || res.data));
     } catch {
       dispatch(logoutAction());
     }
   }, [dispatch]);
 
-  // Login with email/username + password
+  // Login
   const handleLogin = useCallback(
     async (credentials) => {
       try {
         dispatch(setLoading(true));
-        const res = await api.post("/users/login", credentials);
+        const res = await api.post(ENDPOINTS.LOGIN, credentials);
         const userData = res.data?.data?.user || res.data?.data || res.data;
         dispatch(loginAction(userData));
         toast.success("Logged in successfully!");
@@ -47,21 +42,21 @@ export function useAuth() {
         return { success: true };
       } catch (err) {
         dispatch(setLoading(false));
-        const message =
+        const msg =
           err?.response?.data?.message || "Login failed. Please try again.";
-        toast.error(message);
-        return { success: false, message };
+        toast.error(msg);
+        return { success: false, message: msg };
       }
     },
     [dispatch, router]
   );
 
-  // Register a new account
+  // Register
   const handleRegister = useCallback(
     async (formData) => {
       try {
         dispatch(setLoading(true));
-        const res = await api.post("/users/register", formData, {
+        const res = await api.post(ENDPOINTS.REGISTER, formData, {
           headers:
             formData instanceof FormData
               ? { "Content-Type": "multipart/form-data" }
@@ -74,22 +69,22 @@ export function useAuth() {
         return { success: true };
       } catch (err) {
         dispatch(setLoading(false));
-        const message =
+        const msg =
           err?.response?.data?.message ||
           "Registration failed. Please try again.";
-        toast.error(message);
-        return { success: false, message };
+        toast.error(msg);
+        return { success: false, message: msg };
       }
     },
     [dispatch, router]
   );
 
-  // Logout and redirect to home
+  // Logout
   const handleLogout = useCallback(async () => {
     try {
-      await api.post("/users/logout");
+      await api.post(ENDPOINTS.LOGOUT);
     } catch {
-      // Even if the server call fails, clear client state
+      // clear client state regardless
     } finally {
       dispatch(logoutAction());
       toast.success("Logged out");
@@ -97,16 +92,12 @@ export function useAuth() {
     }
   }, [dispatch, router]);
 
-  // Derived convenience flags
-  const isInstructor = user?.role === "instructor";
-  const isStudent = user?.role === "student";
-
   return {
     user,
     isAuthenticated,
     loading,
-    isInstructor,
-    isStudent,
+    isInstructor: user?.role === "instructor",
+    isStudent: user?.role === "student",
     checkAuth,
     handleLogin,
     handleRegister,

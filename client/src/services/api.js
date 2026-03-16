@@ -1,19 +1,15 @@
 import axios from "axios";
 import { API_URL } from "./endpoints";
 
-// Shared Axios instance for the entire app
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, // ensure cookies (auth) are always sent
-  headers: {
-    "Content-Type": "application/json",
-  },
+  withCredentials: true,
+  headers: { "Content-Type": "application/json" },
   timeout: 15000,
 });
 
-// Response interceptor to normalize success and log errors
 api.interceptors.response.use(
-  (response) => response, // return raw response; callers can read `response.data`
+  (response) => response,
   (error) => {
     const status = error?.response?.status;
     const message =
@@ -21,15 +17,10 @@ api.interceptors.response.use(
       error?.message ||
       "Something went wrong";
 
-    // Helpful logging during development and debugging
-    // eslint-disable-next-line no-console
-    console.error("[API ERROR]", { status, message, error });
+    console.error("[API]", status, message);
 
-    // Special handling for unauthorized errors
     if (status === 401) {
-      // You can hook in Redux logout or router redirects from components
-      // eslint-disable-next-line no-console
-      console.warn("[API] 401 Unauthorized detected");
+      console.warn("[API] 401 — session may have expired");
     }
 
     return Promise.reject(error);

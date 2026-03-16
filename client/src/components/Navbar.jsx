@@ -8,6 +8,7 @@ import { Menu, X, LogOut, LayoutDashboard, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 
 const PUBLIC_LINKS = [
@@ -107,6 +108,7 @@ export default function Navbar() {
               </Link>
             </>
           )}
+          <ThemeToggle />
         </div>
 
         {/* Mobile hamburger */}

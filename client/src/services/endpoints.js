@@ -1,19 +1,34 @@
-// Base URL for all backend API calls
-const API_URL =
+// Single source of truth for the backend base URL
+export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
-// Central registry of REST endpoints used by the frontend
+// All backend API endpoint paths (relative to API_URL)
 export const ENDPOINTS = {
-  // ==== AUTH ====
-  AUTH_LOGIN: `${API_URL}/auth/login`,
-  AUTH_REGISTER: `${API_URL}/auth/register`,
-  AUTH_ME: `${API_URL}/auth/me`,
-  AUTH_LOGOUT: `${API_URL}/auth/logout`,
+  // Auth / Users
+  REGISTER: "/users/register",
+  LOGIN: "/users/login",
+  LOGOUT: "/users/logout",
+  PROFILE: "/users/profile",
+  UPDATE_PROFILE: "/users/update-profile",
 
-  // Example course endpoints (can be extended later)
-  COURSES_LIST: `${API_URL}/courses`,
-  COURSE_DETAIL: (courseId) => `${API_URL}/courses/${courseId}`,
+  // Courses
+  COURSES: "/courses",
+  COURSE_BY_ID: (id) => `/courses/${id}`,
+  ENROLL: (id) => `/courses/${id}/enroll`,
+
+  // Sections
+  ADD_SECTION: (courseId) => `/sections/${courseId}`,
+  COURSE_SECTIONS: (courseId) => `/sections/course/${courseId}`,
+  SECTION_BY_ID: (sectionId) => `/sections/${sectionId}`,
+
+  // Videos
+  VIDEOS: "/videos",
+  VIDEO_BY_ID: (id) => `/videos/${id}`,
+
+  // Progress
+  PROGRESS: (courseId) => `/progress/${courseId}`,
+  MARK_COMPLETE: "/progress/complete",
+
+  // Health
+  HEALTH: "/health",
 };
-
-// Export base URL separately for rare custom usage
-export { API_URL };
