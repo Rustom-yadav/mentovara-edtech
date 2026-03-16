@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import VideoPlayer from "@/components/VideoPlayer";
 import api from "@/services/api";
 import { ENDPOINTS } from "@/services/endpoints";
 
@@ -118,18 +119,14 @@ export default function WatchPage() {
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-y-auto">
         {/* Video Player */}
-        <div className="relative w-full bg-black">
-          <div className="mx-auto aspect-video max-h-[70vh]">
-            <video
-              key={video.videoUrl}
-              src={video.videoUrl}
-              controls
-              autoPlay
-              className="h-full w-full"
-            >
-              Your browser does not support the video tag.
-            </video>
-          </div>
+        <div className="w-full max-h-[70vh]">
+          <VideoPlayer
+            key={videoId}
+            url={video.videoUrl}
+            onEnded={() => {
+              if (!isCompleted) markComplete();
+            }}
+          />
         </div>
 
         {/* Video Info Bar */}
