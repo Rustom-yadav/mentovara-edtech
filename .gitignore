@@ -43,7 +43,3 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
-
-# Temp files
-public/temp/*
-!public/temp/.gitkeep
