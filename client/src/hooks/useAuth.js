@@ -2,81 +2,114 @@
 
 import { useSelector, useDispatch } from "react-redux";
 import { useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import api from "@/services/api";
 import {
-  loginUser,
-  registerUser,
-  logoutUser,
-  getCurrentUser,
-  updateProfile,
-  clearAuth,
-  clearError,
+  login as loginAction,
+  logout as logoutAction,
+  setUser,
+  setLoading,
 } from "@/store/slices/authSlice";
 
 /**
- * Custom hook for authentication — provides auth state + dispatched actions.
- * Usage: const { user, isAuthenticated, login, logout, ... } = useAuth();
+ * Central auth hook — exposes state + actions for login, register, logout, etc.
+ * Usage: const { user, isAuthenticated, handleLogin, ... } = useAuth();
  */
 export function useAuth() {
   const dispatch = useDispatch();
-  const { user, isAuthenticated, isLoading, error } = useSelector(
+  const router = useRouter();
+  const { user, isAuthenticated, loading } = useSelector(
     (state) => state.auth
   );
 
-  const login = useCallback(
-    (credentials) => dispatch(loginUser(credentials)),
-    [dispatch]
+  // Fetch current session from backend on app boot
+  const checkAuth = useCallback(async () => {
+    try {
+      dispatch(setLoading(true));
+      const res = await api.get("/users/profile");
+      dispatch(setUser(res.data?.data || res.data));
+    } catch {
+      dispatch(logoutAction());
+    }
+  }, [dispatch]);
+
+  // Login with email/username + password
+  const handleLogin = useCallback(
+    async (credentials) => {
+      try {
+        dispatch(setLoading(true));
+        const res = await api.post("/users/login", credentials);
+        const userData = res.data?.data?.user || res.data?.data || res.data;
+        dispatch(loginAction(userData));
+        toast.success("Logged in successfully!");
+        router.push("/dashboard");
+        return { success: true };
+      } catch (err) {
+        dispatch(setLoading(false));
+        const message =
+          err?.response?.data?.message || "Login failed. Please try again.";
+        toast.error(message);
+        return { success: false, message };
+      }
+    },
+    [dispatch, router]
   );
 
-  const register = useCallback(
-    (formData) => dispatch(registerUser(formData)),
-    [dispatch]
+  // Register a new account
+  const handleRegister = useCallback(
+    async (formData) => {
+      try {
+        dispatch(setLoading(true));
+        const res = await api.post("/users/register", formData, {
+          headers:
+            formData instanceof FormData
+              ? { "Content-Type": "multipart/form-data" }
+              : {},
+        });
+        const userData = res.data?.data || res.data;
+        dispatch(loginAction(userData));
+        toast.success("Account created successfully!");
+        router.push("/dashboard");
+        return { success: true };
+      } catch (err) {
+        dispatch(setLoading(false));
+        const message =
+          err?.response?.data?.message ||
+          "Registration failed. Please try again.";
+        toast.error(message);
+        return { success: false, message };
+      }
+    },
+    [dispatch, router]
   );
 
-  const logout = useCallback(
-    () => dispatch(logoutUser()),
-    [dispatch]
-  );
+  // Logout and redirect to home
+  const handleLogout = useCallback(async () => {
+    try {
+      await api.post("/users/logout");
+    } catch {
+      // Even if the server call fails, clear client state
+    } finally {
+      dispatch(logoutAction());
+      toast.success("Logged out");
+      router.push("/");
+    }
+  }, [dispatch, router]);
 
-  const fetchCurrentUser = useCallback(
-    () => dispatch(getCurrentUser()),
-    [dispatch]
-  );
-
-  const editProfile = useCallback(
-    (formData) => dispatch(updateProfile(formData)),
-    [dispatch]
-  );
-
-  const resetAuth = useCallback(
-    () => dispatch(clearAuth()),
-    [dispatch]
-  );
-
-  const resetError = useCallback(
-    () => dispatch(clearError()),
-    [dispatch]
-  );
-
-  // Derived state
+  // Derived convenience flags
   const isInstructor = user?.role === "instructor";
   const isStudent = user?.role === "student";
 
   return {
-    // State
     user,
     isAuthenticated,
-    isLoading,
-    error,
+    loading,
     isInstructor,
     isStudent,
-
-    // Actions
-    login,
-    register,
-    logout,
-    fetchCurrentUser,
-    editProfile,
-    resetAuth,
-    resetError,
+    checkAuth,
+    handleLogin,
+    handleRegister,
+    handleLogout,
   };
 }

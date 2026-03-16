@@ -1,0 +1,147 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/useAuth";
+
+export default function LoginPage() {
+  const { handleLogin, loading } = useAuth();
+
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  function onChange(e) {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    if (error) setError("");
+  }
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    if (!form.email || !form.password) {
+      setError("Please fill in all fields");
+      return;
+    }
+    const result = await handleLogin(form);
+    if (!result.success) setError(result.message);
+  }
+
+  return (
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+      {/* Background decoration */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
+      <div className="relative w-full max-w-md space-y-8">
+        {/* Header */}
+        <div className="flex flex-col items-center text-center">
+          <Link href="/" className="mb-6 flex items-center gap-2">
+            <Image
+              src="/logo.png"
+              alt="Mentovara"
+              width={40}
+              height={40}
+              className="rounded-xl"
+            />
+            <span className="text-xl font-bold gradient-text">Mentovara</span>
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Log in to continue your learning journey
+          </p>
+        </div>
+
+        {/* Form Card */}
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <form onSubmit={onSubmit} className="space-y-4">
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={onChange}
+                autoComplete="email"
+                autoFocus
+              />
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={onChange}
+                  autoComplete="current-password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+
+            {/* Submit */}
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" data-icon="inline-start" />
+                  Logging in…
+                </>
+              ) : (
+                "Log in"
+              )}
+            </Button>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/auth/register"
+            className="font-medium text-primary hover:underline"
+          >
+            Create one
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
