@@ -79,6 +79,19 @@ export default function CourseDetailPage() {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   }
 
+  function handlePrimaryAction() {
+    if (isOwner) {
+      router.push(`/dashboard/courses/${courseId}/manage`);
+      return;
+    }
+    if (isEnrolled && firstVideo) {
+      router.push(`/watch/${courseId}/${firstVideo._id}`);
+      return;
+    }
+    // If not enrolled, this will also handle redirecting unauthenticated users
+    handleEnroll();
+  }
+
   async function handleEnroll() {
     if (!isAuthenticated) {
       router.push(`/auth/login?from=/courses/${courseId}`);
@@ -201,57 +214,78 @@ export default function CourseDetailPage() {
               </div>
 
               {/* CTA */}
-              <div className="mt-8 flex flex-wrap items-center gap-3">
+              <div className="mt-8 flex flex-col gap-2">
                 {isOwner ? (
-                  <Link href={`/dashboard/courses/${courseId}/manage`}>
-                    <Button size="lg">Manage Course</Button>
-                  </Link>
+                  <Button size="lg" onClick={handlePrimaryAction}>
+                    Manage Course
+                  </Button>
                 ) : isEnrolled ? (
-                  <Link
-                    href={
-                      firstVideo
-                        ? `/watch/${courseId}/${firstVideo._id}`
-                        : "#"
-                    }
+                  <Button
+                    size="lg"
+                    className="gap-2"
+                    onClick={handlePrimaryAction}
+                    disabled={!firstVideo}
                   >
-                    <Button size="lg" className="gap-2">
-                      <PlayCircle className="size-4" data-icon="inline-start" />
-                      Continue Learning
-                    </Button>
-                  </Link>
+                    <PlayCircle className="size-4" data-icon="inline-start" />
+                    {firstVideo ? "Continue Learning" : "No videos yet"}
+                  </Button>
                 ) : (
                   <Button
                     size="lg"
-                    onClick={handleEnroll}
+                    onClick={handlePrimaryAction}
                     disabled={enrolling}
                   >
                     {enrolling ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : (
                       <>
-                        Enroll{" "}
-                        {course.price > 0 ? `— ₹${course.price}` : "Free"}
+                        Enroll to watch all videos{" "}
+                        {course.price > 0 ? `— ₹${course.price}` : "(Free)"}
                       </>
                     )}
                   </Button>
                 )}
+                {!isOwner && !isEnrolled && (
+                  <p className="text-sm text-muted-foreground">
+                    Click the button above to enroll and unlock all course
+                    videos, progress tracking, and watch page access.
+                  </p>
+                )}
                 {isEnrolled && (
-                  <span className="inline-flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-400">
-                    <CheckCircle2 className="size-4" />
-                    Enrolled
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-400">
+                      <CheckCircle2 className="size-4" />
+                      Enrolled
+                    </span>
+                    {firstVideo && (
+                      <span className="text-xs text-muted-foreground">
+                        Click the button above to continue watching.
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Thumbnail */}
-            <div className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-muted lg:aspect-[4/3]">
+            {/* Thumbnail — clickable primary action */}
+            <div
+              className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-muted lg:aspect-[4/3] cursor-pointer group"
+              onClick={handlePrimaryAction}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handlePrimaryAction();
+                }
+              }}
+            >
               {course.thumbnail ? (
                 <Image
                   src={course.thumbnail}
                   alt={course.title}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   priority
                 />
               ) : (
@@ -259,6 +293,16 @@ export default function CourseDetailPage() {
                   <BookOpen className="size-16 text-muted-foreground/30" />
                 </div>
               )}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+              <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white/90">
+                <span>
+                  {isOwner
+                    ? "Click to manage this course"
+                    : isEnrolled
+                    ? "Click to continue watching"
+                    : "Click to enroll and unlock videos"}
+                </span>
+              </div>
             </div>
           </div>
         </div>
