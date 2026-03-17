@@ -17,6 +17,15 @@ export const metadata = {
   description:
     "Mentovara is a modern EdTech platform where instructors create courses and students learn through structured video content with progress tracking.",
   keywords: ["edtech", "courses", "learning", "mentovara", "online education"],
+  icons: {
+    icon: [
+      { url: "/temp/logo.png", sizes: "32x32", type: "image/png" },
+      { url: "/temp/logo.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/temp/logo.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 // Inline script to apply saved theme before paint (avoids flash of wrong theme)
