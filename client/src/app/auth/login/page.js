@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const { handleLogin, loading } = useAuth();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +30,7 @@ export default function LoginPage() {
       setError("Please fill in all fields");
       return;
     }
-    const result = await handleLogin(form);
+    const result = await handleLogin(form, from);
     if (!result.success) setError(result.message);
   }
 

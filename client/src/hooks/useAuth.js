@@ -31,15 +31,20 @@ export function useAuth() {
 
   // Login — backend sets accessToken + refreshToken cookies
   // Response shape: { statusCode, data: { user, accessToken, refreshToken }, message }
+  // redirectTo can be used to send user back to the page they came from
   const handleLogin = useCallback(
-    async (credentials) => {
+    async (credentials, redirectTo) => {
       try {
         dispatch(setLoading(true));
         const res = await api.post(ENDPOINTS.LOGIN, credentials);
         const userData = res.data?.data?.user;
         dispatch(loginAction(userData));
         toast.success("Logged in successfully!");
-        router.push("/dashboard");
+        if (redirectTo && typeof redirectTo === "string") {
+          router.push(redirectTo);
+        } else {
+          router.push("/dashboard");
+        }
         return { success: true };
       } catch (err) {
         dispatch(setLoading(false));
