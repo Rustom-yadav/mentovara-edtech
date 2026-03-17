@@ -17,10 +17,9 @@ api.interceptors.response.use(
       error?.message ||
       "Something went wrong";
 
-    console.error("[API]", status, message);
-
-    if (status === 401) {
-      console.warn("[API] 401 — session may have expired");
+    if (process.env.NODE_ENV === "development") {
+      console.error("[API]", status, message);
+      if (status === 401) console.warn("[API] 401 — session may have expired");
     }
 
     return Promise.reject(error);

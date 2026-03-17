@@ -77,8 +77,26 @@ App runs at `http://localhost:3000`.
 
 ## Environment
 
-- **server**: See `server/README.md` and `server/.env.example` for `MONGODB_URI`, `JWT_SECRET`, `CLOUDINARY_*`, `CORS_ORIGIN`, etc.
+- **server**: See `server/README.md` and `server/.env.example` for `MONGO_URI`, `ACCESS_TOKEN_SECRET`, `CLOUDINARY_*`, `CORS_ORIGIN`, etc.
 - **client**: See `client/README.md` for `NEXT_PUBLIC_API_URL`.
+
+---
+
+## Production checklist
+
+Before deploying:
+
+| Check | Where |
+| ----- | ----- |
+| Set `NEXT_PUBLIC_API_URL` to your live API URL | Client (e.g. Vercel env) |
+| Set `CORS_ORIGIN` to your frontend URL (e.g. `https://mentovara.vercel.app`) | Server `.env` |
+| Set `NODE_ENV=production` | Server (e.g. Railway/Render env) |
+| Use strong `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET` | Server `.env` |
+| MongoDB Atlas (or production DB) connection string in `MONGO_URI` | Server `.env` |
+| Cloudinary env vars set for production | Server `.env` |
+
+- **Client**: `npm run build` passes (already verified).
+- **Server**: Ensure the server is started with `npm start` and env vars are set in your host (Railway, Render, etc.).
 
 ---
 

@@ -43,3 +43,7 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Backend Temp Uploads (Multer)
+server/public/temp/*
+!server/public/temp/.gitkeep

@@ -34,7 +34,7 @@ PORT=8000
 NODE_ENV=development
 
 # MongoDB
-MONGODB_URI=mongodb://localhost:27017/mentovara
+MONGO_URI=mongodb://localhost:27017
 
 # JWT
 ACCESS_TOKEN_SECRET=your-access-token-secret
@@ -51,7 +51,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 CORS_ORIGIN=http://localhost:3000
 ```
 
-- **MONGODB_URI** — Local MongoDB or MongoDB Atlas connection string.
+- **MONGO_URI** — MongoDB connection string (without DB name; app uses DB name `mentovara`).
 - **ACCESS_TOKEN_SECRET / REFRESH_TOKEN_SECRET** — Strong random strings for signing JWTs.
 - **CLOUDINARY_*** — From your Cloudinary dashboard (for image/video uploads).
 - **CORS_ORIGIN** — Frontend origin (e.g. `http://localhost:3000`) so cookies and requests are allowed.
