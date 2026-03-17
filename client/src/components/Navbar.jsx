@@ -29,6 +29,13 @@ export default function Navbar() {
   const pathname = usePathname();
   const { user, isAuthenticated, loading, handleLogout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  function confirmLogout() {
+    setShowLogoutConfirm(false);
+    setMobileOpen(false);
+    handleLogout();
+  }
 
   // Hide navbar on auth pages for a cleaner look
   if (pathname?.startsWith("/auth")) return null;
@@ -92,7 +99,7 @@ export default function Navbar() {
                 </span>
               </div>
 
-              <Button variant="ghost" size="icon-sm" onClick={handleLogout}>
+              <Button variant="ghost" size="icon-sm" onClick={() => setShowLogoutConfirm(true)}>
                 <LogOut className="size-4" />
               </Button>
             </>
@@ -175,10 +182,7 @@ export default function Navbar() {
                   variant="ghost"
                   className="w-full justify-start text-destructive"
                   size="sm"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    handleLogout();
-                  }}
+                  onClick={() => setShowLogoutConfirm(true)}
                 >
                   <LogOut className="size-4" data-icon="inline-start" />
                   Log out
@@ -198,6 +202,43 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowLogoutConfirm(false)}
+          />
+          <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-border bg-card p-6 shadow-xl">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
+                <LogOut className="size-5 text-destructive" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold">Log out?</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Are you sure you want to log out of your account?
+              </p>
+            </div>
+            <div className="mt-6 flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={confirmLogout}
+              >
+                Log out
+              </Button>
+            </div>
           </div>
         </div>
       )}
