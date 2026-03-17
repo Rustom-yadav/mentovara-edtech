@@ -1,37 +1,14 @@
 import { NextResponse } from "next/server";
 
-// Routes that require an authenticated user
-const PROTECTED_PREFIXES = ["/dashboard", "/watch"];
-
-function isProtectedPath(pathname) {
-  return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
-
-// Cookie name set by the backend after login
-const AUTH_COOKIE = "accessToken";
-
+/**
+ * Proxy runs on the server (e.g. Vercel). The browser only sends cookies
+ * for the current domain. So when frontend is on Vercel and backend on Railway,
+ * the accessToken cookie (set by backend) is NEVER sent to Vercel — so we
+ * cannot reliably check auth here. We let all routes through; auth is
+ * enforced client-side after checkAuth() runs (which calls the API and
+ * gets the cookie sent to the backend).
+ */
 export function proxy(request) {
-  const { pathname } = request.nextUrl;
-  const token = request.cookies.get(AUTH_COOKIE)?.value;
-
-  const isAuthRoute =
-    pathname === "/auth/login" ||
-    pathname === "/auth/register" ||
-    pathname.startsWith("/auth/login/") ||
-    pathname.startsWith("/auth/register/");
-
-  // Protected route without token → redirect to login
-  if (isProtectedPath(pathname) && !token) {
-    const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // Already logged-in user visiting auth pages → redirect to dashboard
-  if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
   return NextResponse.next();
 }
 
