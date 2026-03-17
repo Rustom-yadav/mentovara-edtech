@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut, LayoutDashboard, BookOpen } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, BookOpen, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -12,6 +12,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 
 const PUBLIC_LINKS = [
+  { href: "/", label: "Home", icon: Home },
   { href: "/courses", label: "Courses", icon: BookOpen },
 ];
 
@@ -37,8 +38,40 @@ export default function Navbar() {
     handleLogout();
   }
 
-  // Hide navbar on auth pages for a cleaner look
-  if (pathname?.startsWith("/auth")) return null;
+  // Show a minimal navbar on auth pages
+  if (pathname?.startsWith("/auth")) {
+    return (
+      <header className="glass-nav sticky top-0 z-50">
+        <nav className="section-container flex h-16 items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image
+              src="/temp/logo.png"
+              alt="Mentovara"
+              width={72}
+              height={72}
+              className="rounded-lg"
+            />
+            <span className="text-lg font-bold tracking-tight gradient-text">
+              Mentovara
+            </span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/">
+              <Button variant="ghost" size="sm">
+                Home
+              </Button>
+            </Link>
+            <Link href="/courses">
+              <Button variant="ghost" size="sm">
+                Courses
+              </Button>
+            </Link>
+            <ThemeToggle />
+          </div>
+        </nav>
+      </header>
+    );
+  }
 
   return (
     <header className="glass-nav sticky top-0 z-50">
