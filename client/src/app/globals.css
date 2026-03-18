@@ -4,10 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* 
-   MENTOVARA THEME — EdTech Platform
-*/
-
 /* Google Font — Inter (loaded via next/font in layout.js) */
 
 @theme inline {
@@ -53,8 +49,8 @@
   --radius-4xl: 24px;
 }
 
-/* 
-   LIGHT MODE — Clean, Professional, Internshala-like
+/*
+ LIGHT MODE — Clean, Professional
  */
 :root {
   --background: oklch(1 0 0); /* Pure White */
@@ -63,12 +59,10 @@
   --card-foreground: oklch(0.2 0.02 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.02 260);
-  
-  /* Internshala Cerulean Blue: #00A5EC */
+
   --primary: oklch(0.65 0.18 245); 
   --primary-foreground: oklch(1 0 0);
   
-  /* Internshala Pizazz Orange: #FF8C00 */
   --secondary: oklch(0.70 0.19 45); 
   --secondary-foreground: oklch(1 0 0);
   
@@ -102,7 +96,7 @@
 }
 
 /* 
-   DARK MODE — Deep, Immersive, Premium (Internshala usually doesn't have a dark mode, but we'll adapt)
+DARK MODE — Deep, Immersive, Premium
  */
 .dark {
   --background: oklch(0.12 0.02 245);
@@ -151,7 +145,7 @@
   }
 }
 
-/* UTILITY CLASSES — Internshala Aesthetic */
+/* UTILITY CLASSES */
 @layer utilities {
   /* Subtle Glassmorphism (used sparingly) */
   .glass {
@@ -180,7 +174,7 @@
     border-bottom: 1px solid oklch(1 0 0 / 10%);
   }
 
-  /* Internshala Style Gradient Text */
+  /* Style Gradient Text */
   .gradient-text {
     background: linear-gradient(135deg, oklch(0.65 0.18 245), oklch(0.55 0.15 245));
     -webkit-background-clip: text;
