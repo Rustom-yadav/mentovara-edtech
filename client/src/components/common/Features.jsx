@@ -1,36 +1,52 @@
+import {
+  Monitor,
+  BarChart3,
+  BookOpen,
+  Users,
+  Play,
+  GraduationCap,
+} from "lucide-react";
+
+const FEATURES = [
+  {
+    icon: Monitor,
+    title: "Learn at Your Own Pace",
+    description:
+      "No deadlines, no pressure. Watch lectures whenever it suits you and pick up right where you left off.",
+  },
+  {
+    icon: BarChart3,
+    title: "See Your Growth",
+    description:
+      "A visual progress bar tracks every lecture you complete — stay motivated and never lose your place.",
+  },
+  {
+    icon: BookOpen,
+    title: "Well-Structured Curriculum",
+    description:
+      "Every course is organized into clear sections and lectures, making complex topics easy to follow.",
+  },
+  {
+    icon: Users,
+    title: "Learn from Real Instructors",
+    description:
+      "Courses are created by instructors who manage their own content — not scraped or auto-generated.",
+  },
+  {
+    icon: Play,
+    title: "Stream Anywhere",
+    description:
+      "High-quality video streaming that works on any device — desktop, tablet, or mobile.",
+  },
+  {
+    icon: GraduationCap,
+    title: "Student & Instructor Roles",
+    description:
+      "Join as a student to learn, or switch to instructor to share your knowledge with the world.",
+  },
+];
+
 export default function Features() {
-  const FEATURES = [
-    {
-      title: "Learn at Your Own Pace",
-      description:
-        "No deadlines, no pressure. Watch lectures whenever it suits you and pick up right where you left off.",
-    },
-    {
-      title: "See Your Growth",
-      description:
-        "A visual progress bar tracks every lecture you complete — stay motivated and never lose your place.",
-    },
-    {
-      title: "Well-Structured Curriculum",
-      description:
-        "Every course is organized into clear sections and lectures, making complex topics easy to follow.",
-    },
-    {
-      title: "Learn from Real Instructors",
-      description:
-        "Courses are created by instructors who manage their own content — not scraped or auto-generated.",
-    },
-    {
-      title: "Stream Anywhere",
-      description:
-        "High-quality video streaming that works on any device — desktop, tablet, or mobile.",
-    },
-    {
-      title: "Student & Instructor Roles",
-      description:
-        "Join as a student to learn, or switch to instructor to share your knowledge with the world.",
-    },
-  ];
   return (
     <section className="py-24">
       <div className="section-container">
@@ -50,6 +66,9 @@ export default function Features() {
               key={feature.title}
               className="group rounded-2xl border border-border bg-card p-6 transition-all hover-lift"
             >
+              <div className="mb-4 inline-flex rounded-xl bg-primary/10 p-3 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <feature.icon className="size-5" />
+              </div>
               <h3 className="text-lg font-semibold">{feature.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {feature.description}

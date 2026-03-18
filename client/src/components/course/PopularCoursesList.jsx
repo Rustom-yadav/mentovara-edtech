@@ -1,13 +1,37 @@
+"use client";
+import { useEffect, useState } from "react";
 import CourseCard from "@/components/CourseCard";
+import api from "@/services/api";
+import { ENDPOINTS } from "@/services/endpoints";
 
 export default function PopularCoursesList() {
-  // Dummy data, replace with API logic if needed
-  const popularCourses = [
-    { _id: 1, title: "React Basics" },
-    { _id: 2, title: "Advanced JavaScript" },
-    { _id: 3, title: "UI/UX Design" },
-    { _id: 4, title: "Node.js Essentials" },
-  ];
+  const [popularCourses, setPopularCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCourses() {
+      try {
+        const res = await api.get(ENDPOINTS.COURSES, {
+          params: { page: 1, limit: 4 },
+        });
+        setPopularCourses(res.data?.data?.docs || []);
+      } catch {
+        setPopularCourses([]);
+      } finally {
+        setCoursesLoading(false);
+      }
+    }
+    loadCourses();
+  }, []);
+
+  if (coursesLoading) {
+    return null;
+  }
+
+  if (popularCourses.length === 0) {
+    return null;
+  }
+
   return (
     <section className="border-t border-border bg-muted/30 py-24">
       <div className="section-container">
