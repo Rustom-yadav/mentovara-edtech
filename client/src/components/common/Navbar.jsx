@@ -8,7 +8,7 @@ import { Menu, X, LogOut, LayoutDashboard, BookOpen, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import ThemeToggle from "@/components/ThemeToggle";
+import ThemeToggle from "@/components/common/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 
 const PUBLIC_LINKS = [
@@ -47,7 +47,7 @@ export default function Navbar() {
             <Image
               src="/temp/logo.png"
               alt="Mentovara"
-              width={72}
+              width={120}
               height={72}
               className="rounded-lg"
             />
@@ -81,8 +81,8 @@ export default function Navbar() {
           <Image
             src="/temp/logo.png"
             alt="Mentovara"
-            width={72}
-            height={72}
+            width={100}
+            height={100}
             className="rounded-lg"
           />
           <span className="text-lg font-bold tracking-tight gradient-text">

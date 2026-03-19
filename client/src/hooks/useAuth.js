@@ -40,6 +40,7 @@ export function useAuth() {
         const userData = res.data?.data?.user;
         dispatch(loginAction(userData));
         toast.success("Logged in successfully!");
+        
         if (redirectTo && typeof redirectTo === "string") {
           router.push(redirectTo);
         } else {
@@ -57,7 +58,10 @@ export function useAuth() {
     [dispatch, router]
   );
 
-  // Register — backend does NOT set cookies, so we auto-login after register
+  //here we use auto login after registration 
+  // because the backend doesn't set cookies on register route, 
+  // so we need to call login route to set the cookies and get the user data. 
+  // We also handle both FormData and JSON payloads for flexibility.
   // Register response: { statusCode, data: createdUser, message }
   const handleRegister = useCallback(
     async (formData) => {

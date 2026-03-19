@@ -1,9 +1,9 @@
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import StoreProvider from "@/store/StoreProvider";
-import AuthProvider from "@/components/AuthProvider";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import StoreProvider from "@/components/providers/StoreProvider";
+import AuthProvider from "@/components/providers/AuthProvider";
+import Navbar from "@/components/common/Navbar";
+import Footer from "@/components/common/Footer";
 import "./globals.css";
 
 const inter = Inter({

@@ -16,12 +16,12 @@ Next.js frontend for the Mentovara EdTech platform.
 
 ## Scripts
 
-| Command       | Description                |
-| ------------- | -------------------------- |
-| `npm run dev` | Start dev server (default: http://localhost:3000) |
-| `npm run build` | Production build          |
-| `npm run start` | Run production server     |
-| `npm run lint`  | Run ESLint                |
+| Command         | Description                                       |
+| --------------- | ------------------------------------------------- |
+| `npm run dev`   | Start dev server (default: http://localhost:3000) |
+| `npm run build` | Production build                                  |
+| `npm run start` | Run production server                             |
+| `npm run lint`  | Run ESLint                                        |
 
 ---
 
@@ -37,19 +37,93 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
 ---
 
-## Structure (high level)
+## Project Structure
 
 ```
 client/
-├── public/           # Static assets (e.g. temp/logo.png)
+├── public/
+│   └── temp/
 ├── src/
-│   ├── app/          # App Router pages & layout
-│   ├── components/   # Navbar, Footer, CourseCard, VideoPlayer, etc.
-│   ├── hooks/        # useAuth
-│   ├── services/     # api.js, endpoints.js
-│   ├── store/        # Redux store, slices (auth, course)
-│   └── ...
+│   ├── app/
+│   │   ├── globals.css
+│   │   ├── layout.js
+│   │   ├── not-found.js
+│   │   ├── page.js
+│   │   ├── auth/
+│   │   │   ├── login/
+│   │   │   │   └── page.js
+│   │   │   └── register/
+│   │   │       └── page.js
+│   │   ├── courses/
+│   │   │   ├── page.js
+│   │   │   └── [courseId]/
+│   │   │       └── page.js
+│   │   ├── dashboard/
+│   │   │   ├── page.js
+│   │   │   ├── courses/
+│   │   │   │   ├── page.js
+│   │   │   │   ├── new/
+│   │   │   │   │   └── page.js
+│   │   │   │   └── [courseId]/
+│   │   │   │       └── manage/
+│   │   │   │           └── page.js
+│   │   │   ├── enrolled/
+│   │   │   │   └── page.js
+│   │   │   ├── instructor/
+│   │   │   ├── profile/
+│   │   │   │   └── page.js
+│   │   │   ├── student/
+│   │   ├── watch/
+│   │   │   └── [courseId]/
+│   │   │       └── [videoId]/
+│   │   │           └── page.js
+│   ├── components/
+│   │   ├── common/
+│   │   │   ├── Features.jsx
+│   │   │   ├── FinalCTA.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── HeroSection.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── StepsSection.jsx
+│   │   │   ├── TeachCTA.jsx
+│   │   │   └── ThemeToggle.jsx
+│   │   ├── course/
+│   │   │   ├── CourseCard.jsx
+│   │   │   └── PopularCoursesList.jsx
+│   │   ├── providers/
+│   │   │   ├── AuthProvider.jsx
+│   │   │   └── StoreProvider.jsx
+│   │   ├── ui/
+│   │   │   ├── avatar.jsx
+│   │   │   ├── button.jsx
+│   │   │   ├── card.jsx
+│   │   │   ├── input.jsx
+│   │   │   ├── label.jsx
+│   │   │   ├── separator.jsx
+│   │   │   └── sonner.jsx
+│   │   ├── video/
+│   │   │   └── VideoPlayer.jsx
+│   ├── hooks/
+│   │   └── useAuth.js
+│   ├── lib/
+│   │   └── utils.js
+│   ├── services/
+│   │   ├── api.js
+│   │   └── endpoints.js
+│   ├── store/
+│   │   ├── store.js
+│   │   └── slices/
+│   │       ├── authSlice.js
+│   │       └── courseSlice.js
+│   ├── utils/
+│   │   └── .gitkeep
+│   └── proxy.js
+├── components.json
+├── eslint.config.mjs
+├── jsconfig.json
+├── next.config.mjs
 ├── package.json
+├── postcss.config.mjs
 └── README.md
 ```
 

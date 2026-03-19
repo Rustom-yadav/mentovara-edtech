@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import VideoPlayer from "@/components/VideoPlayer";
+import VideoPlayer from "@/components/video/VideoPlayer";
 import api from "@/services/api";
 import { ENDPOINTS } from "@/services/endpoints";
 

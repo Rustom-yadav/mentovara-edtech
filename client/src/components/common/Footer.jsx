@@ -35,8 +35,8 @@ export default function Footer() {
             <Image
               src="/temp/logo.png"
               alt="Mentovara"
-              width={60}
-              height={60}
+              width={80}
+              height={80}
               className="rounded-md"
             />
             <span className="text-base font-bold">Mentovara</span>
@@ -45,7 +45,7 @@ export default function Footer() {
           {/* Social Icons */}
           <div className="flex items-center gap-8">
             <a
-              href="https://github.com"
+              href="https://github.com/Rustom-yadav"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -54,7 +54,7 @@ export default function Footer() {
               <GithubIcon className="size-5" />
             </a>
             <a
-              href="https://linkedin.com"
+              href="https://www.linkedin.com/in/vijay-yadav-b31a7a300/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"

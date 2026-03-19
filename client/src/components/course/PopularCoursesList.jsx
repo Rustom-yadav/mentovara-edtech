@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import CourseCard from "@/components/CourseCard";
+import CourseCard from "@/components/course/CourseCard";
 import api from "@/services/api";
 import { ENDPOINTS } from "@/services/endpoints";
 

@@ -2,16 +2,22 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Search, Loader2, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import CourseCard from "@/components/CourseCard";
+import CourseCard from "@/components/course/CourseCard";
 import { fetchCourses } from "@/store/slices/courseSlice";
 
 export default function CoursesPage() {
   const dispatch = useDispatch();
   const { courses, pagination, isLoading, error } = useSelector(
-    (s) => s.course
+    (s) => s.course,
   );
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,7 +34,7 @@ export default function CoursesPage() {
     (page = 1) => {
       dispatch(fetchCourses({ page, limit: 12, query: debouncedQuery }));
     },
-    [dispatch, debouncedQuery]
+    [dispatch, debouncedQuery],
   );
 
   useEffect(() => {

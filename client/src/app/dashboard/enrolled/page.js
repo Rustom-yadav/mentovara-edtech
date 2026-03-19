@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import CourseCard from "@/components/CourseCard";
+import CourseCard from "@/components/course/CourseCard";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/services/api";
 import { ENDPOINTS } from "@/services/endpoints";
@@ -22,8 +22,8 @@ export default function EnrolledCoursesPage() {
       try {
         const results = await Promise.all(
           user.enrolledCourses.map((id) =>
-            api.get(ENDPOINTS.COURSE_BY_ID(id)).then((r) => r.data?.data)
-          )
+            api.get(ENDPOINTS.COURSE_BY_ID(id)).then((r) => r.data?.data),
+          ),
         );
         setCourses(results.filter(Boolean));
       } catch {
@@ -53,7 +53,10 @@ export default function EnrolledCoursesPage() {
           <p className="text-sm text-muted-foreground">
             Browse courses and enroll to start learning!
           </p>
-          <a href="/courses" className="text-sm font-medium text-primary hover:underline">
+          <a
+            href="/courses"
+            className="text-sm font-medium text-primary hover:underline"
+          >
             Explore Courses →
           </a>
         </div>
