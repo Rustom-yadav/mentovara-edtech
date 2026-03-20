@@ -137,7 +137,7 @@ function LoginForm() {
         <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link
-            href="/auth/register"
+            href={`/auth/register${from ? `?from=${encodeURIComponent(from)}` : ""}`}
             className="font-medium text-primary hover:underline"
           >
             Create one
