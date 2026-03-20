@@ -64,7 +64,7 @@ export function useAuth() {
   // We also handle both FormData and JSON payloads for flexibility.
   // Register response: { statusCode, data: createdUser, message }
   const handleRegister = useCallback(
-    async (formData) => {
+    async (formData, redirectTo) => {
       try {
         dispatch(setLoading(true));
 
@@ -89,7 +89,12 @@ export function useAuth() {
         const userData = loginRes.data?.data?.user;
         dispatch(loginAction(userData));
         toast.success("Account created successfully!");
-        router.push("/dashboard");
+        
+        if (redirectTo && typeof redirectTo === "string") {
+          router.push(redirectTo);
+        } else {
+          router.push("/dashboard");
+        }
         return { success: true };
       } catch (err) {
         dispatch(setLoading(false));

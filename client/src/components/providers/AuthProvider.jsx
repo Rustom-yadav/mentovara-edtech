@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 const PROTECTED_PREFIXES = ["/dashboard", "/watch"];
@@ -16,8 +17,9 @@ function isProtectedPath(pathname) {
  * 2) After check finishes, if user is on a protected route and not logged in,
  *    redirect to login (client-side auth guard).
  */
-export default function AuthProvider({ children }) {
+function AuthProviderContent({ children }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { checkAuth, isAuthenticated, loading } = useAuth();
 
@@ -37,9 +39,18 @@ export default function AuthProvider({ children }) {
   useEffect(() => {
     if (!isAuthenticated || loading) return;
     if (pathname === "/auth/login" || pathname === "/auth/register") {
-      router.replace("/dashboard");
+      const from = searchParams.get("from") || "/dashboard";
+      router.replace(from);
     }
   }, [isAuthenticated, loading, pathname, router]);
 
   return children;
+}
+
+export default function AuthProvider({ children }) {
+  return (
+    <Suspense fallback={null}>
+      <AuthProviderContent>{children}</AuthProviderContent>
+    </Suspense>
+  );
 }

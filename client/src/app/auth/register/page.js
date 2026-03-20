@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
@@ -9,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const { handleRegister, loading } = useAuth();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
 
   const [form, setForm] = useState({
     fullName: "",
@@ -37,7 +40,7 @@ export default function RegisterPage() {
       setError("Password must be at least 8 characters");
       return;
     }
-    const result = await handleRegister(form);
+    const result = await handleRegister(form, from);
     if (!result.success) setError(result.message);
   }
 
@@ -206,7 +209,7 @@ export default function RegisterPage() {
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
-            href="/auth/login"
+            href={`/auth/login${from ? `?from=${from}` : ""}`}
             className="font-medium text-primary hover:underline"
           >
             Log in
@@ -214,5 +217,19 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+          <Loader2 className="size-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <RegisterForm />
+    </Suspense>
   );
 }

@@ -30,10 +30,15 @@ Next.js frontend for the Mentovara EdTech platform.
 Create `.env.local` in `client/`:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+# The internal proxy route (leave as /api for client components)
+NEXT_PUBLIC_INTERNAL_API_URL=/api
+
+# The actual destination of the backend (Render or Localhost)
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 ```
 
-- `NEXT_PUBLIC_API_URL` — Backend API base URL (no trailing slash). Required for all API calls.
+- `NEXT_PUBLIC_BACKEND_URL` — Backend API base URL (no trailing `/api/v1`). Required for all API proxy calls.
+- `NEXT_PUBLIC_INTERNAL_API_URL` — Internal route used by Axios to trigger the Next.js rewrite.
 
 ---
 
@@ -132,7 +137,7 @@ client/
 ## Running with the backend
 
 1. Start the **server** first (see root [README.md](../README.md) or `server/README.md`).
-2. Set `NEXT_PUBLIC_API_URL` in `client/.env.local` to the server URL.
+2. Set `NEXT_PUBLIC_BACKEND_URL` in `client/.env.local` to the backend server URL.
 3. Run `npm run dev` in `client/`.
 
 ---

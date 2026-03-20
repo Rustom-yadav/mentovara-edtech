@@ -1,32 +1,100 @@
 import { NextResponse } from "next/server";
 
 /*
- * Proxy runs on Vercel server. By default, browsers only send cookies
- * for the current domain. When frontend is on Vercel 
- * and backend is on Render , the accessToken cookie
- * (set by backend) is NOT sent to Vercel in proxy requests.
+ * Problem:
+ * ----------
+ * Initially, frontend (Vercel) and backend (Render) were on different domains.
+ * Because of this, the browser treated cookies as third-party cookies.
  *
- * Currently, we cannot reliably check auth in proxy because the cookie is missing.
- * We let all matched routes through (NextResponse.next()).
+ * Result:
+ * - accessToken cookie (set by backend) was NOT sent in requests
+ * - Even with withCredentials: true, cookie was blocked
+ * - On page refresh, /users/profile returned 401 Unauthorized
+ * - Redux state reset → user logged out
  *
- * Authentication is enforced client-side via checkAuth() which calls the backend API
- * (with withCredentials: true), so the cookie is sent to the backend domain correctly.
  *
- * Future improvement:
- * - Use SameSite=None + Secure + domain=.yourdomain.com on cookie (requires custom domain)
- * - Or move frontend + backend under same root domain/subdomain
- * - Or add a client-side redirect + loading guard on protected pages
- * - or we can send a cookie from the frontend to the browser like document.cookie = "proxyToken=123" and read it in the proxy, but this is a bit hacky and not recommended for production
+ * Solutions Explored:
+ * -------------------
+ * 1. SameSite=None + Secure cookies
+ *    → Required for cross-site cookies
+ *    → Still unreliable due to browser restrictions (third-party cookie blocking)
+ *
+ * 2. Same domain / subdomain setup (frontend + backend)
+ *    → Ideal solution (e.g. api.example.com)
+ *    → But requires custom domain + deployment changes
+ *
+ * 3. LocalStorage / Redux persist
+ *    → Easy but NOT secure (XSS risk)
+ *    → Rejected for production use
+ *
+ * 4. Client-side auth check only
+ *    → Works but causes UI flicker and poor UX
+ *
+ *
+ * Final Solution (Best Approach):
+ * -------------------------------
+ * Used Next.js rewrites as a proxy layer.
+ *
+ * Flow:
+ * Browser → /api → Next.js (Vercel server) → Backend
+ *
+ * Benefits:
+ * - Requests appear as SAME-ORIGIN to the browser
+ * - Cookies are stored as FIRST-PARTY cookies
+ * - No third-party cookie blocking
+ * - No complex CORS issues
+ * - Secure httpOnly cookie works properly
+ *
+ * Result:
+ * - accessToken cookie is now available in middleware
+ * - Login state persists after refresh
+ * - Server-side route protection is possible
+ *
+ *
+ * Conclusion:
+ * ------------
+ * Next.js proxy (rewrites) is the most practical and production-friendly
+ * solution when frontend and backend are on different domains.
  */
-export function proxy(_req) {
+
+export function proxy(request) {
+  const pathname = request.nextUrl.pathname;
+  const search = request.nextUrl.search;
+
+  // Public routes
+  const publicPaths = [
+    "/auth/login",
+    "/auth/register",
+    "/api",
+    "/",
+    "/courses",
+  ];
+
+  const isPublic = publicPaths.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
+
+  if (isPublic) {
+    return NextResponse.next();
+  }
+
+  // Check cookie
+  const accessToken = request.cookies.get("accessToken")?.value;
+
+  if (!accessToken) {
+    const loginUrl = new URL("/auth/login", request.url);
+
+    const redirectPath = pathname + (search || "");
+    loginUrl.searchParams.set("from", redirectPath);
+
+    return NextResponse.redirect(loginUrl);
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/watch/:path*",
-    "/auth/login/:path*",
-    "/auth/register/:path*",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };

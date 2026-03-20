@@ -1,6 +1,6 @@
-// Single source of truth for the backend base URL
+// Single source of truth for the backend base URL (Now routes through Next.js proxy)
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+  process.env.NEXT_PUBLIC_INTERNAL_API_URL || "/api";
 
 // All backend API endpoint paths (relative to API_URL)
 export const ENDPOINTS = {

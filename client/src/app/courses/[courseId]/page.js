@@ -27,6 +27,7 @@ export default function CourseDetailPage() {
 
   const [course, setCourse] = useState(null);
   const [sections, setSections] = useState([]);
+  const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
 
@@ -41,10 +42,15 @@ export default function CourseDetailPage() {
         // getCourseSections requires JWT — only fetch if logged in
         if (isAuthenticated) {
           try {
-            const secRes = await api.get(ENDPOINTS.COURSE_SECTIONS(courseId));
+            const [secRes, progRes] = await Promise.all([
+              api.get(ENDPOINTS.COURSE_SECTIONS(courseId)).catch(() => ({ data: { data: [] } })),
+              api.get(ENDPOINTS.PROGRESS(courseId)).catch(() => ({ data: { data: { completedVideos: [] } } }))
+            ]);
             setSections(secRes.data?.data || []);
+            setProgress(progRes.data?.data || { completedVideos: [] });
           } catch {
             setSections([]);
+            setProgress({ completedVideos: [] });
           }
         }
       } catch {
@@ -84,8 +90,8 @@ export default function CourseDetailPage() {
       router.push(`/dashboard/courses/${courseId}/manage`);
       return;
     }
-    if (isEnrolled && firstVideo) {
-      router.push(`/watch/${courseId}/${firstVideo._id}`);
+    if (isEnrolled && continueVideo) {
+      router.push(`/watch/${courseId}/${continueVideo._id}`);
       return;
     }
     // If not enrolled, this will also handle redirecting unauthenticated users
@@ -145,8 +151,13 @@ export default function CourseDetailPage() {
     );
   }
 
-  // Find the first video for "Continue Learning" button
-  const firstVideo = sections[0]?.videos?.[0];
+  // Find the next video for "Continue Learning" button
+  const allVideos = sections.flatMap((s) => s.videos || []);
+  const firstUnwatchedVideo = allVideos.find(
+    (v) => !progress?.completedVideos?.includes(v._id)
+  );
+  // Default to the first unwatched, or the first video if all watched/progress missing
+  const continueVideo = firstUnwatchedVideo || allVideos[0];
 
   return (
     <div>
@@ -224,10 +235,10 @@ export default function CourseDetailPage() {
                     size="lg"
                     className="gap-2"
                     onClick={handlePrimaryAction}
-                    disabled={!firstVideo}
+                    disabled={!continueVideo}
                   >
                     <PlayCircle className="size-4" data-icon="inline-start" />
-                    {firstVideo ? "Continue Learning" : "No videos yet"}
+                    {continueVideo ? "Continue Learning" : "No videos yet"}
                   </Button>
                 ) : (
                   <Button
@@ -257,7 +268,7 @@ export default function CourseDetailPage() {
                       <CheckCircle2 className="size-4" />
                       Enrolled
                     </span>
-                    {firstVideo && (
+                    {continueVideo && (
                       <span className="text-xs text-muted-foreground">
                         Click the button above to continue watching.
                       </span>
@@ -267,25 +278,14 @@ export default function CourseDetailPage() {
               </div>
             </div>
 
-            {/* Thumbnail — clickable primary action */}
-            <div
-              className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-muted lg:aspect-[4/3] cursor-pointer group"
-              onClick={handlePrimaryAction}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handlePrimaryAction();
-                }
-              }}
-            >
+            {/* Thumbnail — static visual only */}
+            <div className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-muted lg:aspect-[4/3]">
               {course.thumbnail ? (
                 <Image
                   src={course.thumbnail}
                   alt={course.title}
                   fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                  className="object-cover"
                   priority
                 />
               ) : (
@@ -293,16 +293,6 @@ export default function CourseDetailPage() {
                   <BookOpen className="size-16 text-muted-foreground/30" />
                 </div>
               )}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-              <div className="pointer-events-none absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white/90">
-                <span>
-                  {isOwner
-                    ? "Click to manage this course"
-                    : isEnrolled
-                    ? "Click to continue watching"
-                    : "Click to enroll and unlock videos"}
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -353,27 +343,37 @@ export default function CourseDetailPage() {
                   </summary>
                   <div className="border-t border-border">
                     {section.videos && section.videos.length > 0 ? (
-                      section.videos.map((video, vIdx) => (
-                        <div
-                          key={video._id}
-                          className="flex items-center gap-3 px-5 py-3 text-sm hover:bg-muted/50 transition-colors"
-                        >
-                          <PlayCircle className="size-4 shrink-0 text-muted-foreground" />
-                          <span className="flex-1">
-                            {sIdx + 1}.{vIdx + 1} {video.title}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDuration(video.duration)}
-                          </span>
-                          {isEnrolled && (
-                            <Link href={`/watch/${courseId}/${video._id}`}>
-                              <Button variant="ghost" size="xs">
-                                Watch
-                              </Button>
-                            </Link>
-                          )}
-                        </div>
-                      ))
+                      section.videos.map((video, vIdx) => {
+                        const isDone = progress?.completedVideos?.includes(video._id);
+                        
+                        const rowContent = (
+                          <div
+                            className={`flex items-center gap-3 px-5 py-3 text-sm transition-colors ${
+                              isEnrolled ? "hover:bg-muted/50 cursor-pointer" : ""
+                            }`}
+                          >
+                            {isDone ? (
+                              <CheckCircle2 className="size-4 shrink-0 text-green-600 dark:text-green-400" />
+                            ) : (
+                              <PlayCircle className="size-4 shrink-0 text-muted-foreground" />
+                            )}
+                            <span className="flex-1">
+                              {sIdx + 1}.{vIdx + 1} {video.title}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDuration(video.duration)}
+                            </span>
+                          </div>
+                        );
+
+                        return isEnrolled ? (
+                          <Link key={video._id} href={`/watch/${courseId}/${video._id}`} className="block">
+                            {rowContent}
+                          </Link>
+                        ) : (
+                          <div key={video._id}>{rowContent}</div>
+                        );
+                      })
                     ) : (
                       <p className="px-5 py-3 text-sm text-muted-foreground">
                         No lectures in this section yet.
