@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-/**
+/*
  * Proxy runs on Vercel server. By default, browsers only send cookies
  * for the current domain. When frontend is on Vercel 
  * and backend is on Render , the accessToken cookie

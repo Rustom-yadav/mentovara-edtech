@@ -7,6 +7,7 @@ import CourseCard from "@/components/course/CourseCard";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/services/api";
 import { ENDPOINTS } from "@/services/endpoints";
+import Link from "next/link";
 
 export default function EnrolledCoursesPage() {
   const { user } = useAuth();
@@ -53,12 +54,12 @@ export default function EnrolledCoursesPage() {
           <p className="text-sm text-muted-foreground">
             Browse courses and enroll to start learning!
           </p>
-          <a
+          <Link
             href="/courses"
             className="text-sm font-medium text-primary hover:underline"
           >
             Explore Courses →
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

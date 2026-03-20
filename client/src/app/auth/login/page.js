@@ -87,7 +87,6 @@ function LoginForm() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
                   value={form.password}
                   onChange={onChange}
                   autoComplete="current-password"

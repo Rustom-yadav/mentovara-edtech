@@ -10,7 +10,6 @@ import {
   User,
   ArrowRight,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function DashboardPage() {
