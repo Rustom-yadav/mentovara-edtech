@@ -9,6 +9,14 @@ A modern EdTech platform where instructors create structured video courses and s
 
 ---
 
+## API Documentation
+
+The complete API documentation is available via Postman. This collection includes all endpoints for course management, authentication, and user progress tracking.
+
+🔗 **Postman Collection:** [View API Documentation](https://vijayyadav-official-4892899.postman.co/workspace/Vijay-Yadav's-Workspace~b311eace-bf23-4c27-863a-47b64a5efa0e/collection/52621760-64117d9f-fdf1-4258-909e-a14d4b2458d0?action=share&source=copy-link&creator=52621760)
+
+---
+
 ## Tech Stack
 
 | Layer    | Stack                          |
@@ -34,8 +42,6 @@ Mentovara/
 Frontend app (see [client/README.md](./client/README.md))
 - **[server/](./server/)** — 
 Backend API (see [server/README.md](./server/README.md))
-
----
 
 ## Quick Start
 
