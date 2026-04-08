@@ -17,7 +17,9 @@ export const metadata = {
   description:
     "Mentovara is a modern EdTech platform where instructors create courses and students learn through structured video content with progress tracking.",
   keywords: ["edtech", "courses", "learning", "mentovara", "online education"],
-
+  verification: {
+    google: "05nsT381gB_XfIpgl1CwfoTdRSgjVwLPVoQMuUBYeu0",
+  },
 };
 
 // Inline script to apply saved theme before paint (avoids flash of wrong theme)
