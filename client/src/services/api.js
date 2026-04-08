@@ -8,69 +8,67 @@ const api = axios.create({
   timeout: 15000,
 });
 
-// For multiple requests
 let isRefreshing = false;
 let failedQueue = [];
 
+// Queue process karne ka function
 const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
       prom.resolve(token);
     }
   });
-
   failedQueue = [];
 };
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const originalRequest = error.config;
-    const status = error?.response?.status;
-    const message =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Something went wrong";
 
-    if (process.env.NODE_ENV === "development") {
-      console.error("[API]", status, message);
-      if (status === 401) console.warn("[API] 401 — session may have expired");
-    }
-
-    if (status === 401 && !originalRequest._retry && originalRequest.url !== ENDPOINTS.REFRESH_TOKEN) {
+    // Check if error is 401 and not a retry and not the refresh call itself
+    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== ENDPOINTS.REFRESH_TOKEN) {
+      
       if (isRefreshing) {
-        return new Promise(function(resolve, reject) {
+        // Agar pehle se refresh ho raha hai, toh request ko queue mein daal do
+        return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-        .then(token => {
-          return api(originalRequest);
-        })
-        .catch(err => {
-          return Promise.reject(err);
-        });
+          .then(() => api(originalRequest))
+          .catch((err) => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
-      return new Promise(function (resolve, reject) {
-        axios.post(`${API_URL}${ENDPOINTS.REFRESH_TOKEN}`, {}, { withCredentials: true })
-          .then(({ data }) => {
-            processQueue(null, data.data.accessToken);
-            resolve(api(originalRequest));
-          })
-          .catch((err) => {
-            processQueue(err, null);
-            reject(err);
-          })
-          .finally(() => {
-            isRefreshing = false;
-          });
-      });
+      try {
+        // Refresh token call (Directly use axios to avoid interceptor loop)
+        const { data } = await axios.post(`${API_URL}${ENDPOINTS.REFRESH_TOKEN}`, {}, { withCredentials: true });
+        
+        // Agar response mein naya token mil raha hai (Headers ke liye)
+        const newToken = data?.data?.accessToken;
+        
+        processQueue(null, newToken);
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        
+        // Optional: Yahan user ko logout karwane ka logic daal sakte hain
+        // window.location.href = '/login';
+        
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
 
+    // Baaki errors ke liye
+    if (process.env.NODE_ENV === "development") {
+      console.error("[API Error]", error.response?.status, error.message);
+    }
+    
     return Promise.reject(error);
   }
 );
