@@ -11,7 +11,7 @@ const api = axios.create({
 let isRefreshing = false;
 let failedQueue = [];
 
-// Queue process karne ka function
+// Queue process  function
 const processQueue = (error, token = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
@@ -32,7 +32,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== ENDPOINTS.REFRESH_TOKEN) {
       
       if (isRefreshing) {
-        // Agar pehle se refresh ho raha hai, toh request ko queue mein daal do
+        // if already refreshing, queue the request
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -56,7 +56,7 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         
         // Optional: Yahan user ko logout karwane ka logic daal sakte hain
-        // window.location.href = '/login';
+        // window.location.href = '/login'; causes infinite loop so we don't do it here
         
         return Promise.reject(refreshError);
       } finally {
