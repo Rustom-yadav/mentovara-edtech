@@ -74,6 +74,15 @@ export default function VideoPlayer({ url, poster, onEnded }) {
   }
 
   // Auto-hide controls after 3s of no interaction
+  function toggleFullscreen() {
+    if (!containerRef.current) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      containerRef.current.requestFullscreen();
+    }
+  }
+
   const resetHideTimer = useCallback(() => {
     setShowControls(true);
     clearTimeout(hideControlsTimer.current);
@@ -83,6 +92,7 @@ export default function VideoPlayer({ url, poster, onEnded }) {
   }, [playing]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     resetHideTimer();
     return () => clearTimeout(hideControlsTimer.current);
   }, [playing, resetHideTimer]);
@@ -174,15 +184,6 @@ export default function VideoPlayer({ url, poster, onEnded }) {
     const v = videoRef.current;
     if (!v) return;
     v.currentTime = Math.max(0, Math.min(v.duration, v.currentTime + seconds));
-  }
-
-  function toggleFullscreen() {
-    if (!containerRef.current) return;
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    } else {
-      containerRef.current.requestFullscreen();
-    }
   }
 
   if (!url) {

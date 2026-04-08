@@ -39,7 +39,7 @@ export default function StepsSection() {
             <span className="gradient-text">3 simple steps</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
-            No complicated setup. Browse, enroll, and learn — it's that easy.
+            No complicated setup. Browse, enroll, and learn — it&apos;s that easy.
           </p>
         </div>
         <div className="mt-16 grid gap-8 sm:grid-cols-3">

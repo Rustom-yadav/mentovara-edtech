@@ -42,7 +42,7 @@ function AuthProviderContent({ children }) {
       const from = searchParams.get("from") || "/dashboard";
       router.replace(from);
     }
-  }, [isAuthenticated, loading, pathname, router]);
+  }, [isAuthenticated, loading, pathname, router, searchParams]);
 
   return children;
 }
