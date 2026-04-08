@@ -63,10 +63,6 @@ api.interceptors.response.use(
           })
           .catch((err) => {
             processQueue(err, null);
-            if (typeof window !== "undefined") {
-              // redirect on refresh token failure
-              window.location.href = "/login";
-            }
             reject(err);
           })
           .finally(() => {
