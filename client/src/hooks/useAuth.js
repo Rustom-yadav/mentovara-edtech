@@ -26,6 +26,8 @@ export function useAuth() {
       dispatch(setUser(res.data?.data));
     } catch {
       dispatch(logoutAction());
+    } finally {
+      dispatch(setLoading(false));
     }
   }, [dispatch]);
 
@@ -48,11 +50,12 @@ export function useAuth() {
         }
         return { success: true };
       } catch (err) {
-        dispatch(setLoading(false));
         const msg =
           err?.response?.data?.message || "Login failed. Please try again.";
         toast.error(msg);
         return { success: false, message: msg };
+      } finally {
+        dispatch(setLoading(false));
       }
     },
     [dispatch, router]
@@ -83,7 +86,10 @@ export function useAuth() {
                 email: formData.get("email"),
                 password: formData.get("password"),
               }
-            : { email: formData.email, password: formData.password };
+            : {
+                email: formData.email,
+                password: formData.password
+              };
 
         const loginRes = await api.post(ENDPOINTS.LOGIN, loginCredentials);
         const userData = loginRes.data?.data?.user;
@@ -97,12 +103,13 @@ export function useAuth() {
         }
         return { success: true };
       } catch (err) {
-        dispatch(setLoading(false));
         const msg =
           err?.response?.data?.message ||
           "Registration failed. Please try again.";
         toast.error(msg);
         return { success: false, message: msg };
+      } finally {
+        dispatch(setLoading(false));
       }
     },
     [dispatch, router]
