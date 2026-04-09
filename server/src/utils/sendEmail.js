@@ -1,7 +1,11 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
+
+// Force IPv4 DNS resolution (Render free tier doesn't support IPv6 outbound)
+dns.setDefaultResultOrder("ipv4first");
 
 /**
- * Send an email using Nodemailer + Brevo SMTP
+ * Send an email using Nodemailer + Gmail SMTP
  * @param {Object} options
  * @param {string} options.email - Recipient email
  * @param {string} options.subject - Email subject
@@ -10,7 +14,7 @@ import nodemailer from "nodemailer";
 const sendEmail = async (options) => {
   // Create transporter
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: Number(process.env.SMTP_PORT) || 587,
     secure: false, // false for port 587 (STARTTLS)
     auth: {
@@ -18,11 +22,15 @@ const sendEmail = async (options) => {
       pass: process.env.SMTP_PASS,
     },
     // Timeouts to prevent hanging connections
-    connectionTimeout: 10000, // 10 seconds to establish connection
-    greetingTimeout: 10000,   // 10 seconds for server greeting
-    socketTimeout: 15000,     // 15 seconds for socket inactivity
+    connectionTimeout: 15000, // 15 seconds to establish connection
+    greetingTimeout: 15000,   // 15 seconds for server greeting
+    socketTimeout: 20000,     // 20 seconds for socket inactivity
     tls: {
-      rejectUnauthorized: false, // Allow self-signed certs in dev
+      rejectUnauthorized: false,
+    },
+    // Force IPv4 at socket level too
+    dnsOptions: {
+      family: 4,
     },
   });
 
