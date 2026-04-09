@@ -123,12 +123,17 @@ function RegisterForm() {
                 ref={fileInputRef}
                 onChange={handleAvatarChange}
               />
-              <div 
+              <div
                 className="relative size-20 rounded-full border-2 border-dashed border-border bg-muted flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition-colors group z-10"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {avatarPreview ? (
-                  <Image src={avatarPreview} alt="Avatar preview" fill className="object-cover" />
+                  <Image
+                    src={avatarPreview}
+                    alt="Avatar preview"
+                    fill
+                    className="object-cover"
+                  />
                 ) : (
                   <Camera className="size-6 text-muted-foreground group-hover:text-primary transition-colors" />
                 )}
@@ -140,15 +145,15 @@ function RegisterForm() {
               </div>
               {avatarPreview ? (
                 <div className="flex items-center gap-4 pt-1">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => fileInputRef.current?.click()}
                     className="text-xs font-medium text-primary hover:underline"
                   >
                     Change
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={removeAvatar}
                     className="text-xs font-medium text-destructive hover:underline"
                   >
@@ -238,7 +243,9 @@ function RegisterForm() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, role: "student" }))}
+                  onClick={() =>
+                    setForm((prev) => ({ ...prev, role: "student" }))
+                  }
                   className={`rounded-xl border px-4 py-3 text-center text-sm font-medium transition-all ${
                     form.role === "student"
                       ? "border-primary bg-primary/10 text-primary"
@@ -281,7 +288,10 @@ function RegisterForm() {
             >
               {loading ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" data-icon="inline-start" />
+                  <Loader2
+                    className="size-4 animate-spin"
+                    data-icon="inline-start"
+                  />
                   Creating account…
                 </>
               ) : (

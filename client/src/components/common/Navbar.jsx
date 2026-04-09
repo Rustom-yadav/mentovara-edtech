@@ -115,7 +115,10 @@ export default function Navbar() {
             <>
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm">
-                  <LayoutDashboard className="size-4" data-icon="inline-start" />
+                  <LayoutDashboard
+                    className="size-4"
+                    data-icon="inline-start"
+                  />
                   Dashboard
                 </Button>
               </Link>
@@ -134,7 +137,11 @@ export default function Navbar() {
                 </span>
               </div>
 
-              <Button variant="ghost" size="icon-sm" onClick={() => setShowLogoutConfirm(true)}>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setShowLogoutConfirm(true)}
+              >
                 <LogOut className="size-4" />
               </Button>
             </>
@@ -199,7 +206,9 @@ export default function Navbar() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">{user?.fullName}</span>
+                    <span className="text-sm font-medium">
+                      {user?.fullName}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       {user?.email}
                     </span>
@@ -207,8 +216,15 @@ export default function Navbar() {
                 </div>
 
                 <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
-                  <Button variant="ghost" className="w-full justify-start" size="sm">
-                    <LayoutDashboard className="size-4" data-icon="inline-start" />
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    size="sm"
+                  >
+                    <LayoutDashboard
+                      className="size-4"
+                      data-icon="inline-start"
+                    />
                     Dashboard
                   </Button>
                 </Link>
@@ -230,7 +246,10 @@ export default function Navbar() {
                     Log in
                   </Button>
                 </Link>
-                <Link href="/auth/register" onClick={() => setMobileOpen(false)}>
+                <Link
+                  href="/auth/register"
+                  onClick={() => setMobileOpen(false)}
+                >
                   <Button className="w-full" size="sm">
                     Get Started
                   </Button>
