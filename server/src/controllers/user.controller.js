@@ -68,25 +68,23 @@ const registerUser = asyncHandler(async (req, res) => {
             throw new ApiError(500, "Something went wrong while registering the user");
         }
 
-        try {
-            const message = `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>Welcome to Mentovara!</h2>
-                    <p>Thank you for registering. Please use the following code to verify your email address:</p>
-                    <h1 style="background: #f4f4f4; padding: 10px; text-align: center; letter-spacing: 5px;">${otp}</h1>
-                    <p>This code will expire in 15 minutes.</p>
-                </div>
-            `;
-            await sendEmail({
-                email: user.email,
-                subject: "Verify Your Email Address - Mentovara",
-                message,
-            });
-        } catch (error) {
+        // Fire-and-forget: send email in background so registration response is instant
+        // If email fails, user can request a new OTP from the verify-email page
+        const message = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>Welcome to Mentovara!</h2>
+                <p>Thank you for registering. Please use the following code to verify your email address:</p>
+                <h1 style="background: #f4f4f4; padding: 10px; text-align: center; letter-spacing: 5px;">${otp}</h1>
+                <p>This code will expire in 15 minutes.</p>
+            </div>
+        `;
+        sendEmail({
+            email: user.email,
+            subject: "Verify Your Email Address - Mentovara",
+            message,
+        }).catch((error) => {
             console.error("Failed to send verification email:", error);
-            // Optionally, we could choose to fail the registration here, but
-            // instead we just log the error and let the user request a new OTP later.
-        }
+        });
 
         const createdUser = user.toObject();
         delete createdUser.password;
