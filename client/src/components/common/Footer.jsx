@@ -38,7 +38,6 @@ export default function Footer() {
               width={80}
               height={80}
               className="rounded-md"
-              unoptimized
             />
             <span className="text-base font-bold">Mentovara</span>
           </Link>
