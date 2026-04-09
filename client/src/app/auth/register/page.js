@@ -41,6 +41,14 @@ function RegisterForm() {
     }
   };
 
+  const removeAvatar = () => {
+    setAvatar(null);
+    setAvatarPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   function onChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     if (error) setError("");
@@ -130,9 +138,28 @@ function RegisterForm() {
                   </div>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground text-center">
-                Profile picture (max 2MB)
-              </p>
+              {avatarPreview ? (
+                <div className="flex items-center gap-4 pt-1">
+                  <button 
+                    type="button" 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    Change
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={removeAvatar}
+                    className="text-xs font-medium text-destructive hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center">
+                  Profile picture (max 2MB)
+                </p>
+              )}
             </div>
 
             {/* Full Name */}
