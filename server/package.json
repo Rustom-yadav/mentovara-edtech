@@ -4,6 +4,9 @@
   "description": "Backend server for Mentovara EdTech platform",
   "main": "index.js",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
