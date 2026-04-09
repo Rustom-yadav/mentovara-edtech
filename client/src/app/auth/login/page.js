@@ -52,6 +52,7 @@ function LoginForm() {
               width={80}
               height={80}
               className="rounded-xl"
+              unoptimized
             />
             <span className="text-xl font-bold gradient-text">Mentovara</span>
           </Link>
