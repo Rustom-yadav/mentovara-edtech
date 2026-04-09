@@ -61,9 +61,7 @@ export function useAuth() {
     [dispatch, router]
   );
 
-  //here we use auto login after registration 
-  // because the backend doesn't set cookies on register route, 
-  // so we need to call login route to set the cookies and get the user data. 
+  // Handle registration and then redirect to the login page.
   // We also handle both FormData and JSON payloads for flexibility.
   // Register response: { statusCode, data: createdUser, message }
   const handleRegister = useCallback(
@@ -79,28 +77,16 @@ export function useAuth() {
               : {},
         });
 
-        // Step 2: Auto-login since register doesn't set cookies
-        const loginCredentials =
-          formData instanceof FormData
-            ? {
-                email: formData.get("email"),
-                password: formData.get("password"),
-              }
-            : {
-                email: formData.email,
-                password: formData.password
-              };
-
-        const loginRes = await api.post(ENDPOINTS.LOGIN, loginCredentials);
-        const userData = loginRes.data?.data?.user;
-        dispatch(loginAction(userData));
-        toast.success("Account created successfully!");
+        toast.success("Account created successfully! Please verify your email.");
+        
+        const userEmail = formData instanceof FormData ? formData.get("email") : formData.email;
+        let verifyUrl = `/auth/verify-email?email=${encodeURIComponent(userEmail)}`;
         
         if (redirectTo && typeof redirectTo === "string") {
-          router.push(redirectTo);
-        } else {
-          router.push("/dashboard");
+          verifyUrl += `&from=${redirectTo}`;
         }
+        router.push(verifyUrl);
+
         return { success: true };
       } catch (err) {
         const msg =
@@ -128,6 +114,35 @@ export function useAuth() {
     }
   }, [dispatch, router]);
 
+  // Verify email using OTP
+  const handleVerifyEmail = useCallback(async (email, otp) => {
+    try {
+      dispatch(setLoading(true));
+      await api.post(ENDPOINTS.VERIFY_EMAIL, { email, otp });
+      toast.success("Email verified successfully! Please log in.");
+      return { success: true };
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Verification failed. Please try again.";
+      toast.error(msg);
+      return { success: false, message: msg };
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [dispatch]);
+
+  // Resend verification email
+  const handleResendVerification = useCallback(async (email) => {
+    try {
+      await api.post(ENDPOINTS.RESEND_VERIFICATION, { email });
+      toast.success("Verification email sent!");
+      return { success: true };
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Failed to resend email.";
+      toast.error(msg);
+      return { success: false, message: msg };
+    }
+  }, []);
+
   // Refresh user data from backend (e.g., after enrolling in a course)
   const refreshUser = useCallback(async () => {
     try {
@@ -149,5 +164,7 @@ export function useAuth() {
     handleRegister,
     handleLogout,
     refreshUser,
+    handleVerifyEmail,
+    handleResendVerification,
   };
 }

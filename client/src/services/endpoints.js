@@ -11,6 +11,8 @@ export const ENDPOINTS = {
   PROFILE: "/users/profile",
   UPDATE_PROFILE: "/users/update-profile",
   REFRESH_TOKEN: "/users/refresh-token",
+  VERIFY_EMAIL: "/users/verify-email",
+  RESEND_VERIFICATION: "/users/resend-verification",
 
   // Courses
   COURSES: "/courses",

@@ -44,6 +44,18 @@ const userSchema = new Schema(
             enum: ["student", "instructor"],
             default: "student",
         },
+        isEmailVerified: {
+            type: Boolean,
+            default: false,
+        },
+        emailVerificationOTP: {
+            type: String, // Stored encrypted or as-is purely (we'll hash it before saving ideally, or just store the plain string if it's securely generated and short-lived, let's keep it simple for now)
+            select: false,
+        },
+        emailVerificationOTPExpiry: {
+            type: Date,
+            select: false,
+        },
         enrolledCourses: [
             {
                 type: Schema.Types.ObjectId,

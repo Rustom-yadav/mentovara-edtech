@@ -5,6 +5,8 @@ import User from "../models/User.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import fs from "fs";
 import jwt from "jsonwebtoken";
+import sendEmail from "../utils/sendEmail.js";
+import crypto from "crypto";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -47,6 +49,9 @@ const registerUser = asyncHandler(async (req, res) => {
             avatar = await uploadOnCloudinary(avatarLocalPath);
         }
 
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
         const user = await User.create({
             fullName,
             avatar: avatar?.secure_url || "",
@@ -54,18 +59,43 @@ const registerUser = asyncHandler(async (req, res) => {
             email,
             password,
             username: username,
-            role: role || "student"
+            role: role || "student",
+            emailVerificationOTP: otp,
+            emailVerificationOTPExpiry: otpExpiry,
+            isEmailVerified: false
         });
 
         if (!user) {
             throw new ApiError(500, "Something went wrong while registering the user");
         }
 
+        try {
+            const message = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>Welcome to Mentovara!</h2>
+                    <p>Thank you for registering. Please use the following code to verify your email address:</p>
+                    <h1 style="background: #f4f4f4; padding: 10px; text-align: center; letter-spacing: 5px;">${otp}</h1>
+                    <p>This code will expire in 15 minutes.</p>
+                </div>
+            `;
+            await sendEmail({
+                email: user.email,
+                subject: "Verify Your Email Address - Mentovara",
+                message,
+            });
+        } catch (error) {
+            console.error("Failed to send verification email:", error);
+            // Optionally, we could choose to fail the registration here, but
+            // instead we just log the error and let the user request a new OTP later.
+        }
+
         const createdUser = user.toObject();
         delete createdUser.password;
         delete createdUser.refreshToken;
+        delete createdUser.emailVerificationOTP;
+        delete createdUser.emailVerificationOTPExpiry;
 
-        return res.status(201).json(new ApiResponse(201, createdUser, "User registered successfully"));
+        return res.status(201).json(new ApiResponse(201, createdUser, "User registered successfully. Please verify your email."));
     } catch (error) {
         if (avatarLocalPath && fs.existsSync(avatarLocalPath)) {
             fs.unlinkSync(avatarLocalPath);
@@ -97,6 +127,10 @@ const loginUser = asyncHandler(async (req, res) => {
 
     if (!isPasswordValid) {
         throw new ApiError(401, "Invalid user credentials");
+    }
+
+    if (!user.isEmailVerified) {
+        throw new ApiError(403, "Please verify your email address before logging in.");
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
@@ -245,11 +279,92 @@ const updateProfile = asyncHandler(async (req, res) => {
     }
 });
 
+const verifyEmail = asyncHandler(async (req, res) => {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+        throw new ApiError(400, "Email and OTP are required");
+    }
+
+    const user = await User.findOne({ email }).select("+emailVerificationOTP +emailVerificationOTPExpiry");
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    if (user.isEmailVerified) {
+        return res.status(200).json(new ApiResponse(200, null, "Email is already verified"));
+    }
+
+    if (user.emailVerificationOTP !== otp) {
+        throw new ApiError(400, "Invalid OTP");
+    }
+
+    if (user.emailVerificationOTPExpiry < Date.now()) {
+        throw new ApiError(400, "OTP has expired. Please request a new one.");
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationOTP = undefined;
+    user.emailVerificationOTPExpiry = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json(new ApiResponse(200, null, "Email verified successfully"));
+});
+
+const resendVerificationEmail = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        throw new ApiError(400, "Email is required");
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    if (user.isEmailVerified) {
+        return res.status(200).json(new ApiResponse(200, null, "Email is already verified"));
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    user.emailVerificationOTP = otp;
+    user.emailVerificationOTPExpiry = otpExpiry;
+    await user.save({ validateBeforeSave: false });
+
+    try {
+        const message = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>Welcome to Mentovara!</h2>
+                <p>Please use the following code to verify your email address:</p>
+                <h1 style="background: #f4f4f4; padding: 10px; text-align: center; letter-spacing: 5px;">${otp}</h1>
+                <p>This code will expire in 15 minutes.</p>
+            </div>
+        `;
+        await sendEmail({
+            email: user.email,
+            subject: "Verify Your Email Address - Mentovara",
+            message,
+        });
+    } catch (error) {
+        console.error("Failed to resend verification email:", error);
+        throw new ApiError(500, "Failed to send verification email. Please try again later.");
+    }
+
+    return res.status(200).json(new ApiResponse(200, null, "Verification email resent successfully"));
+});
+
 export { 
     registerUser, 
     loginUser, 
     logoutUser, 
     getCurrentUser, 
     updateProfile,
-    refreshAccessToken 
+    refreshAccessToken,
+    verifyEmail,
+    resendVerificationEmail
 };
