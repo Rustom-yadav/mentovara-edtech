@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +22,24 @@ function RegisterForm() {
     password: "",
     role: "student",
   });
+  const [avatar, setAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        setError("Image size should be less than 2MB");
+        return;
+      }
+      setAvatar(file);
+      setAvatarPreview(URL.createObjectURL(file));
+      setError("");
+    }
+  };
 
   function onChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -40,7 +56,20 @@ function RegisterForm() {
       setError("Password must be at least 8 characters");
       return;
     }
-    const result = await handleRegister(form, from);
+
+    let submitData = form;
+
+    if (avatar) {
+      submitData = new FormData();
+      submitData.append("fullName", form.fullName);
+      submitData.append("username", form.username);
+      submitData.append("email", form.email);
+      submitData.append("password", form.password);
+      submitData.append("role", form.role);
+      submitData.append("avatar", avatar);
+    }
+
+    const result = await handleRegister(submitData, from);
     if (!result.success) setError(result.message);
   }
 
@@ -76,6 +105,35 @@ function RegisterForm() {
         {/* Form Card */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <form onSubmit={onSubmit} className="space-y-4">
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center justify-center space-y-3 pb-2">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleAvatarChange}
+              />
+              <div 
+                className="relative size-20 rounded-full border-2 border-dashed border-border bg-muted flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary transition-colors group z-10"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {avatarPreview ? (
+                  <Image src={avatarPreview} alt="Avatar preview" fill className="object-cover" />
+                ) : (
+                  <Camera className="size-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                )}
+                {avatarPreview && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="size-5 text-white" />
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Profile picture (max 2MB)
+              </p>
+            </div>
+
             {/* Full Name */}
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
