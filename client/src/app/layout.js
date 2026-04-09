@@ -13,12 +13,29 @@ const inter = Inter({
 });
 
 export const metadata = {
+  metadataBase: new URL("https://mentovara.vercel.app"),
   title: "Mentovara — Learn, Grow, Succeed",
   description:
     "Mentovara is a modern EdTech platform where instructors create courses and students learn through structured video content with progress tracking.",
   keywords: ["edtech", "courses", "learning", "mentovara", "online education"],
   verification: {
     google: "05nsT381gB_XfIpgl1CwfoTdRSgjVwLPVoQMuUBYeu0",
+  },
+  openGraph: {
+    title: "Mentovara — Learn, Grow, Succeed",
+    description: "Mentovara is a modern EdTech platform.",
+    url: "https://mentovara.vercel.app",
+    siteName: "Mentovara",
+    images: [
+      {
+        url: "/temp/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Mentovara Logo",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
   },
 };
 
