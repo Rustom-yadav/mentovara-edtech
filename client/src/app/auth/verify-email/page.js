@@ -148,7 +148,7 @@ function VerifyEmailForm() {
 
           <div className="mt-6 flex flex-col items-center justify-center space-y-2">
             <p className="text-sm text-muted-foreground">
-              Didn't receive the code?
+              Didn&apos;t receive the code?
             </p>
             <Button
               variant="outline"
