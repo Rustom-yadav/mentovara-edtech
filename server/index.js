@@ -1,4 +1,5 @@
 import "dotenv/config";
+import http from "http";
 import connectDB from "./src/db/index.js";
 import { app } from "./src/app.js";
 
@@ -11,7 +12,9 @@ connectDB()
             throw error;
         });
 
-        app.listen(PORT, "0.0.0.0", () => {
+        // Use http.createServer for explicit port binding (Render compatible)
+        const server = http.createServer(app);
+        server.listen(PORT, "0.0.0.0", () => {
             console.log(`Server is running on port: ${PORT}`);
             console.log(`Health check: http://localhost:${PORT}/api/v1/health`);
         });
