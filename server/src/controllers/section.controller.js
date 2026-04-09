@@ -124,7 +124,7 @@ const deleteSection = asyncHandler(async (req, res) => {
         await Section.findByIdAndDelete(sectionId, { session });
 
         await session.commitTransaction();
-    } catch (error) {
+    } catch {
         await session.abortTransaction();
         throw new ApiError(500, "Failed to delete section due to internal error");
     } finally {

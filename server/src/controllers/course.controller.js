@@ -244,7 +244,7 @@ const deleteCourse = asyncHandler(async (req, res) => {
         await Course.findByIdAndDelete(courseId, { session });
 
         await session.commitTransaction();
-    } catch (error) {
+    } catch {
         await session.abortTransaction();
         throw new ApiError(500, "Failed to delete course due to an internal transaction error");
     } finally {

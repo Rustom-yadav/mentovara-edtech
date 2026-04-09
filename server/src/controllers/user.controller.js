@@ -6,7 +6,6 @@ import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js
 import fs from "fs";
 import jwt from "jsonwebtoken";
 import sendEmail from "../utils/sendEmail.js";
-import crypto from "crypto";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -18,7 +17,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
         await user.save({ validateBeforeSave: false });
 
         return { accessToken, refreshToken };
-    } catch (error) {
+    } catch {
         throw new ApiError(500, "Something went wrong while generating tokens");
     }
 };
