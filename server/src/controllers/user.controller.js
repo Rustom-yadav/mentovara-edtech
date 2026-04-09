@@ -127,7 +127,9 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     if (!user.isEmailVerified) {
-        throw new ApiError(403, "Please verify your email address before logging in.");
+        return res.status(403).json(
+            new ApiResponse(403, { email: user.email, isEmailVerified: false }, "Please verify your email address before logging in.")
+        );
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);

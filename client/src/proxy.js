@@ -65,6 +65,7 @@ export function proxy(request) {
   const publicPaths = [
     "/auth/login",
     "/auth/register",
+    "/auth/verify-email",
     "/api",
     "/",
     "/courses",

@@ -39,6 +39,19 @@ export function useAuth() {
       try {
         dispatch(setLoading(true));
         const res = await api.post(ENDPOINTS.LOGIN, credentials);
+
+        // Check if server returned 403 (email not verified)
+        if (res.data?.data?.isEmailVerified === false) {
+          const userEmail = res.data.data.email;
+          toast.error("Please verify your email first.");
+          let verifyUrl = `/auth/verify-email?email=${encodeURIComponent(userEmail)}`;
+          if (redirectTo && typeof redirectTo === "string") {
+            verifyUrl += `&from=${redirectTo}`;
+          }
+          router.push(verifyUrl);
+          return { success: false, message: res.data?.message };
+        }
+
         const userData = res.data?.data?.user;
         dispatch(loginAction(userData));
         toast.success("Logged in successfully!");
@@ -50,8 +63,22 @@ export function useAuth() {
         }
         return { success: true };
       } catch (err) {
-        const msg =
-          err?.response?.data?.message || "Login failed. Please try again.";
+        const status = err?.response?.status;
+        const data = err?.response?.data;
+        const msg = data?.message || "Login failed. Please try again.";
+
+        // Also handle 403 from error responses (email not verified)
+        if (status === 403 && data?.data?.isEmailVerified === false) {
+          const userEmail = data.data.email;
+          toast.error("Please verify your email first.");
+          let verifyUrl = `/auth/verify-email?email=${encodeURIComponent(userEmail)}`;
+          if (redirectTo && typeof redirectTo === "string") {
+            verifyUrl += `&from=${redirectTo}`;
+          }
+          router.push(verifyUrl);
+          return { success: false, message: msg };
+        }
+
         toast.error(msg);
         return { success: false, message: msg };
       } finally {

@@ -64,8 +64,8 @@ api.interceptors.response.use(
       }
     }
 
-    // Baaki errors ke liye
-    if (process.env.NODE_ENV === "development") {
+    // Log unexpected errors in development (skip 401/403 — handled explicitly)
+    if (process.env.NODE_ENV === "development" && ![401, 403].includes(error.response?.status)) {
       console.error("[API Error]", error.response?.status, error.message);
     }
     
