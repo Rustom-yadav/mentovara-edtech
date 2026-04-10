@@ -9,11 +9,12 @@ import fs from "fs";
 
 const addVideo = asyncHandler(async (req, res) => {
     const videoLocalPath = req.file?.path;
+    let uploadedVideoPublicId; // Track for cleanup on failure
 
     try {
         const { title, description, section } = req.body;
 
-        // 1. Validation improvements
+        // 1. Validation
         if (!title || !section) {
             throw new ApiError(400, "Title and section ID are required");
         }
@@ -29,12 +30,10 @@ const addVideo = asyncHandler(async (req, res) => {
             throw new ApiError(400, "Video file is required");
         }
 
-        // 3. Cloudinary Upload
+        // 3. Cloudinary Upload (throws on failure)
         const videoUpload = await uploadOnCloudinary(videoLocalPath);
 
-        if (!videoUpload) {
-            throw new ApiError(500, "Failed to upload video to Cloudinary");
-        }
+        uploadedVideoPublicId = videoUpload.public_id;
 
         // 4. Create Video
         const video = await Video.create({
@@ -46,36 +45,27 @@ const addVideo = asyncHandler(async (req, res) => {
             section
         });
 
-        if (!video) {
-            throw new ApiError(500, "Something went wrong while saving the video record");
-        }
-
-        // 5. Update Section (Directly push and check)
-        const updatedSection = await Section.findByIdAndUpdate(
+        // 5. Update Section
+        await Section.findByIdAndUpdate(
             section,
             { $addToSet: { videos: video._id } },
             { new: true }
         );
-
-        if (!updatedSection) {
-            // Agar section nahi mila toh video delete karna pad sakta hai (optional advanced step)
-            throw new ApiError(404, "Section not found, video could not be linked");
-        }
 
         return res.status(201).json(
             new ApiResponse(201, video, "Video added successfully")
         );
 
     } catch (error) {
-        // 7. Critical: Cleanup local file even if something fails
+        // Clean up local file
         if (videoLocalPath && fs.existsSync(videoLocalPath)) {
             fs.unlinkSync(videoLocalPath);
         }
-        
-        if (error instanceof ApiError) {
-            throw error;
+        // Clean up Cloudinary upload if it succeeded before the error
+        if (uploadedVideoPublicId) {
+            deleteFromCloudinary(uploadedVideoPublicId, "video").catch(() => {});
         }
-        throw new ApiError(500, error?.message || "Internal Server Error during video upload");
+        throw error;
     }
 });
 

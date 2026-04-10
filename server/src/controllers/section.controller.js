@@ -73,10 +73,6 @@ const getCourseSections = asyncHandler(async (req, res) => {
 
     const sections = await Section.find({ course: courseId }).populate("videos");
 
-    if (!sections || sections.length === 0) {
-        throw new ApiError(404, "Sections not found for this course");
-    }
-
     return res.status(200).json(new ApiResponse(200, sections, "Course sections fetched successfully"));
 });
 

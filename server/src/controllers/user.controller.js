@@ -28,6 +28,8 @@ const registerUser = asyncHandler(async (req, res) => {
         avatarLocalPath = req.files.avatar[0].path;
     }
 
+    let uploadedAvatarPublicId; // Track for cleanup on failure
+
     try {
         const { fullName, email, username, password, role } = req.body;
 
@@ -46,6 +48,7 @@ const registerUser = asyncHandler(async (req, res) => {
         let avatar;
         if (avatarLocalPath) {
             avatar = await uploadOnCloudinary(avatarLocalPath);
+            uploadedAvatarPublicId = avatar?.public_id;
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -63,10 +66,6 @@ const registerUser = asyncHandler(async (req, res) => {
             emailVerificationOTPExpiry: otpExpiry,
             isEmailVerified: false
         });
-
-        if (!user) {
-            throw new ApiError(500, "Something went wrong while registering the user");
-        }
 
         // Fire-and-forget: send email in background so registration response is instant
         // If email fails, user can request a new OTP from the verify-email page
@@ -94,8 +93,13 @@ const registerUser = asyncHandler(async (req, res) => {
 
         return res.status(201).json(new ApiResponse(201, createdUser, "User registered successfully. Please verify your email."));
     } catch (error) {
+        // Clean up local temp file
         if (avatarLocalPath && fs.existsSync(avatarLocalPath)) {
             fs.unlinkSync(avatarLocalPath);
+        }
+        // Clean up Cloudinary upload if it succeeded before the error
+        if (uploadedAvatarPublicId) {
+            deleteFromCloudinary(uploadedAvatarPublicId).catch(() => {});
         }
         throw error;
     }

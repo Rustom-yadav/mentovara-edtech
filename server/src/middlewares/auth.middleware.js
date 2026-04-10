@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import User from "../models/User.model.js";
+import { USER_ROLES } from "../constants.js";
 
 export const verifyJWT = asyncHandler(async (req, _res, next) => {
     try {
@@ -32,7 +33,7 @@ export const verifyJWT = asyncHandler(async (req, _res, next) => {
 
 // Middleware to check if user is an instructor
 export const isInstructor = asyncHandler(async (req, _res, next) => {
-    if (req.user?.role !== "instructor") {
+    if (req.user?.role !== USER_ROLES.INSTRUCTOR) {
         throw new ApiError(403, "Access denied. Instructor role required.");
     }
     next();

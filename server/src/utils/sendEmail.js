@@ -4,6 +4,36 @@ import dns from "dns";
 // Force IPv4 DNS resolution (Render free tier doesn't support IPv6 outbound)
 dns.setDefaultResultOrder("ipv4first");
 
+// Lazy singleton — transporter is created once and reused for all emails
+let transporter = null;
+
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: false, // false for port 587 (STARTTLS)
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      // Timeouts to prevent hanging connections
+      connectionTimeout: 15000, // 15 seconds to establish connection
+      greetingTimeout: 15000,   // 15 seconds for server greeting
+      socketTimeout: 20000,     // 20 seconds for socket inactivity
+      tls: {
+        rejectUnauthorized: false,
+      },
+      // Force IPv4 at socket level too
+      dnsOptions: {
+        family: 4,
+      },
+      pool: true, // Use connection pooling for better performance
+    });
+  }
+  return transporter;
+}
+
 /**
  * Send an email using Nodemailer + Gmail SMTP
  * @param {Object} options
@@ -12,28 +42,6 @@ dns.setDefaultResultOrder("ipv4first");
  * @param {string} options.message - Email body (HTML)
  */
 const sendEmail = async (options) => {
-  // Create transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false, // false for port 587 (STARTTLS)
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    // Timeouts to prevent hanging connections
-    connectionTimeout: 15000, // 15 seconds to establish connection
-    greetingTimeout: 15000,   // 15 seconds for server greeting
-    socketTimeout: 20000,     // 20 seconds for socket inactivity
-    tls: {
-      rejectUnauthorized: false,
-    },
-    // Force IPv4 at socket level too
-    dnsOptions: {
-      family: 4,
-    },
-  });
-
   const fromName = process.env.FROM_NAME || "Mentovara";
 
   const mailOptions = {
@@ -44,7 +52,7 @@ const sendEmail = async (options) => {
   };
 
   // Send email
-  const info = await transporter.sendMail(mailOptions);
+  const info = await getTransporter().sendMail(mailOptions);
 
   console.log(`✅ Email sent successfully! Message ID: ${info.messageId}`);
   return info;

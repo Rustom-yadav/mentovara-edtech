@@ -15,6 +15,8 @@ const createCourse = asyncHandler(async (req, res) => {
         thumbnailLocalPath = req.file.path;
     }
 
+    let uploadedThumbnailPublicId; // Track for cleanup on failure
+
     try {
         const { title, description, price, isPublished } = req.body;
 
@@ -25,6 +27,7 @@ const createCourse = asyncHandler(async (req, res) => {
         let thumbnail;
         if (thumbnailLocalPath) {
             thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+            uploadedThumbnailPublicId = thumbnail?.public_id;
         }
 
         const course = await Course.create({
@@ -37,14 +40,15 @@ const createCourse = asyncHandler(async (req, res) => {
             instructor: req.user._id
         });
 
-        if (!course) {
-            throw new ApiError(500, "Something went wrong while creating the course");
-        }
-
         return res.status(201).json(new ApiResponse(201, course, "Course created successfully"));
     } catch (error) {
+        // Clean up local temp file
         if (thumbnailLocalPath && fs.existsSync(thumbnailLocalPath)) {
             fs.unlinkSync(thumbnailLocalPath);
+        }
+        // Clean up Cloudinary upload if it succeeded before the error
+        if (uploadedThumbnailPublicId) {
+            deleteFromCloudinary(uploadedThumbnailPublicId).catch(() => {});
         }
         throw error;
     }
@@ -114,10 +118,6 @@ const getCourses = asyncHandler(async (req, res) => {
     };
 
     const courses = await Course.aggregatePaginate(Course.aggregate(pipeline), options);
-    
-    if (!courses || courses.docs.length === 0) {
-        throw new ApiError(404, "No courses found matching your criteria");
-    }
 
     return res.status(200).json(new ApiResponse(200, courses, "Courses fetched successfully"));
 });
