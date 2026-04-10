@@ -2,6 +2,12 @@
 export const API_URL =
   process.env.NEXT_PUBLIC_INTERNAL_API_URL || "/api";
 
+// Direct backend URL — bypasses Next.js proxy for large file uploads (videos)
+// Next.js rewrites / Vercel serverless functions have a ~4.5MB body size limit,
+// so video uploads must go directly to the backend.
+export const DIRECT_API_URL =
+  `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"}/api/v1`;
+
 // All backend API endpoint paths (relative to API_URL)
 export const ENDPOINTS = {
   // Auth / Users

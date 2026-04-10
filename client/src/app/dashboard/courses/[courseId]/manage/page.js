@@ -19,7 +19,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import api from "@/services/api";
-import { ENDPOINTS } from "@/services/endpoints";
+import { ENDPOINTS, DIRECT_API_URL } from "@/services/endpoints";
+import axios from "axios";
 
 export default function ManageCoursePage() {
   const { courseId } = useParams();
@@ -87,13 +88,20 @@ export default function ManageCoursePage() {
   }
 
   // Upload video to a section
+  // Uses direct backend URL to bypass Next.js proxy body size limit (~4.5MB)
   async function handleUploadVideo(sectionId, formData) {
     setUploadingVideoFor(sectionId);
     try {
       formData.append("section", sectionId);
-      const res = await api.post(ENDPOINTS.VIDEOS, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await axios.post(
+        `${DIRECT_API_URL}${ENDPOINTS.VIDEOS}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true, // send cookies for auth
+          timeout: 5 * 60 * 1000, // 5 minutes for large video uploads
+        }
+      );
       const newVideo = res.data?.data;
       setSections((prev) =>
         prev.map((s) =>
