@@ -7,19 +7,22 @@ import fs from "fs";
 import jwt from "jsonwebtoken";
 import sendEmail from "../utils/sendEmail.js";
 
-const generateAccessAndRefreshTokens = async (userId) => {
-    try {
-        const user = await User.findById(userId);
-        const accessToken = user.generateAccessToken();
-        const refreshToken = user.generateRefreshToken();
+// Shared cookie options — DRY (used in login, logout, refresh)
+const getCookieOptions = () => ({
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+});
 
-        user.refreshToken = refreshToken;
-        await user.save({ validateBeforeSave: false });
+// Accepts user object directly to avoid an extra findById call
+const generateAccessAndRefreshTokens = async (user) => {
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
 
-        return { accessToken, refreshToken };
-    } catch {
-        throw new ApiError(500, "Something went wrong while generating tokens");
-    }
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
 };
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -136,17 +139,13 @@ const loginUser = asyncHandler(async (req, res) => {
         );
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user);
 
     const loggedInUser = user.toObject();
     delete loggedInUser.password;
     delete loggedInUser.refreshToken;
 
-    const options = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-    };
+    const options = getCookieOptions();
 
     return res
         .status(200)
@@ -172,11 +171,7 @@ const logoutUser = asyncHandler(async (req, res) => {
         { new: true }
     );
 
-    const options = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-    };
+    const options = getCookieOptions();
 
     return res
         .status(200)
@@ -208,13 +203,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError(401, "Refresh token is expired or used");
         }
 
-        const options = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax"
-        };
+        const options = getCookieOptions();
 
-        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
+        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(user);
 
         return res
             .status(200)

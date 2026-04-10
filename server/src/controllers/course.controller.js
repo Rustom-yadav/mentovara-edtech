@@ -7,6 +7,7 @@ import User from "../models/User.model.js";
 import Section from "../models/Section.model.js";
 import Video from "../models/Video.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import { checkOwnership } from "../utils/checkOwnership.js";
 import fs from "fs";
 
 const createCourse = asyncHandler(async (req, res) => {
@@ -150,9 +151,7 @@ const updateCourse = asyncHandler(async (req, res) => {
             throw new ApiError(404, "Course not found");
         }
 
-        if (course.instructor.toString() !== req.user._id.toString()) {
-            throw new ApiError(403, "You are not authorized to update this course");
-        }
+        checkOwnership(course.instructor, req.user._id, "You are not authorized to update this course");
 
         const updateData = {};
         if (title) updateData.title = title;
@@ -199,9 +198,7 @@ const deleteCourse = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Course not found");
     }
 
-    if (course.instructor.toString() !== req.user._id.toString()) {
-        throw new ApiError(403, "You are not authorized to delete this course");
-    }
+    checkOwnership(course.instructor, req.user._id, "You are not authorized to delete this course");
 
     if (course.thumbnailPublicId) {
         await deleteFromCloudinary(course.thumbnailPublicId);
@@ -257,11 +254,6 @@ const deleteCourse = asyncHandler(async (req, res) => {
 const enrollInCourse = asyncHandler(async (req, res) => {
     const { courseId } = req.params;
 
-    const course = await Course.findById(courseId);
-    if (!course) {
-        throw new ApiError(404, "Course not found");
-    }
-
     const updatedUser = await User.findOneAndUpdate(
         {
             _id: req.user._id,
@@ -277,12 +269,19 @@ const enrollInCourse = asyncHandler(async (req, res) => {
         throw new ApiError(400, "You are already enrolled in this course");
     }
 
-    await Course.findByIdAndUpdate(
+    // Increment count + verify course exists in one call
+    const course = await Course.findByIdAndUpdate(
         courseId,
-        {
-            $inc: { enrolledStudents: 1 }
-        }
+        { $inc: { enrolledStudents: 1 } }
     );
+
+    if (!course) {
+        // Rollback enrollment if course doesn't exist
+        await User.findByIdAndUpdate(req.user._id, {
+            $pull: { enrolledCourses: courseId }
+        });
+        throw new ApiError(404, "Course not found");
+    }
 
     return res.status(200).json(new ApiResponse(200, {}, "Successfully enrolled in the course"));
 });

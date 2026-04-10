@@ -6,6 +6,7 @@ import Section from "../models/Section.model.js";
 import Course from "../models/Course.model.js";
 import Video from "../models/Video.model.js";
 import { deleteFromCloudinary } from "../utils/cloudinary.js";
+import { checkOwnership } from "../utils/checkOwnership.js";
 
 const addSection = asyncHandler(async (req, res) => {
     const { title } = req.body;
@@ -20,19 +21,12 @@ const addSection = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Course not found");
     }
 
-    // Verify instructor owns the course
-    if (course.instructor.toString() !== req.user._id.toString()) {
-        throw new ApiError(403, "You are not authorized to add a section to this course");
-    }
+    checkOwnership(course.instructor, req.user._id, "You are not authorized to add a section to this course");
 
     const section = await Section.create({
         title,
         course: courseId
     });
-
-    if (!section) {
-        throw new ApiError(500, "Something went wrong while creating the section");
-    }
 
     // Link section to course
     await Course.findByIdAndUpdate(
@@ -57,10 +51,7 @@ const updateSection = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Section not found");
     }
 
-    // Authorization check
-    if (section.course.instructor.toString() !== req.user._id.toString()) {
-        throw new ApiError(403, "You are not authorized to update this section");
-    }
+    checkOwnership(section.course.instructor, req.user._id, "You are not authorized to update this section");
 
     section.title = title;
     await section.save({ validateBeforeSave: false });
@@ -85,9 +76,7 @@ const deleteSection = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Section not found");
     }
 
-    if (section.course.instructor.toString() !== req.user._id.toString()) {
-        throw new ApiError(403, "You are not authorized to delete this section");
-    }
+    checkOwnership(section.course.instructor, req.user._id, "You are not authorized to delete this section");
 
     const session = await mongoose.startSession();
     
