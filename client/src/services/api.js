@@ -7,7 +7,7 @@ const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
-  timeout: 30000,
+  timeout: 60000, // 60 seconds default (was 30s — too short for Cloudinary ops)
 });
 
 let isRefreshing = false;
@@ -25,6 +25,17 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+// ── Request Interceptor ──
+// File uploads (FormData) → timeout OFF (backend pe rely karo)
+// Normal requests → 60 sec timeout (safety net if server is dead)
+api.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    config.timeout = 0; // No timeout — wait for backend response
+  }
+  return config;
+});
+
+// ── Response Interceptor ──
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
