@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { useSelector } from "react-redux";
 import Link from "next/link";
 import {
   Plus,
@@ -24,6 +25,7 @@ import axios from "axios";
 
 export default function ManageCoursePage() {
   const { courseId } = useParams();
+  const accessToken = useSelector((s) => s.auth.accessToken);
 
   const [course, setCourse] = useState(null);
   const [sections, setSections] = useState([]);
@@ -97,8 +99,11 @@ export default function ManageCoursePage() {
         `${DIRECT_API_URL}${ENDPOINTS.VIDEOS}`,
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
-          withCredentials: true, // send cookies for auth
+          headers: {
+            "Content-Type": "multipart/form-data",
+            ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+          },
+          withCredentials: true, // fallback: send cookies if same-origin
           timeout: 5 * 60 * 1000, // 5 minutes for large video uploads
         }
       );

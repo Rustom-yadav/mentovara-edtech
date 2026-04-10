@@ -229,7 +229,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-    return res.status(200).json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+    // Return the access token alongside user data so the frontend
+    // can store it in Redux for direct backend requests (e.g., video uploads)
+    const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+    return res.status(200).json(
+        new ApiResponse(200, { user: req.user, accessToken }, "Current user fetched successfully")
+    );
 });
 
 const updateProfile = asyncHandler(async (req, res) => {

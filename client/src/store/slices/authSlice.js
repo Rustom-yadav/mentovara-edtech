@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 // Initial auth state that matches the requested shape
 const initialState = {
   user: null,
+  accessToken: null,
   isAuthenticated: false,
   loading: true,
 };
@@ -14,13 +15,15 @@ const authSlice = createSlice({
   reducers: {
     // Set user data and mark the session as authenticated
     login(state, action) {
-      state.user = action.payload;
+      state.user = action.payload.user;
+      state.accessToken = action.payload.accessToken || null;
       state.isAuthenticated = true;
       state.loading = false;
     },
     // Clear all user info and mark as logged out
     logout(state) {
       state.user = null;
+      state.accessToken = null;
       state.isAuthenticated = false;
       state.loading = false;
     },
@@ -30,6 +33,10 @@ const authSlice = createSlice({
       state.isAuthenticated = !!action.payload;
       state.loading = false;
     },
+    // Store a fresh access token (e.g., after token refresh)
+    setAccessToken(state, action) {
+      state.accessToken = action.payload;
+    },
     // Explicitly toggle loading state (useful around initial checks)
     setLoading(state, action) {
       state.loading = action.payload;
@@ -37,6 +44,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { login, logout, setUser, setLoading } = authSlice.actions;
+export const { login, logout, setUser, setAccessToken, setLoading } = authSlice.actions;
 export default authSlice.reducer;
-

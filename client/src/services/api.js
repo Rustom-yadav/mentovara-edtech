@@ -1,5 +1,7 @@
 import axios from "axios";
 import { API_URL, ENDPOINTS } from "./endpoints";
+import { store } from "@/store/store";
+import { setAccessToken } from "@/store/slices/authSlice";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -47,8 +49,11 @@ api.interceptors.response.use(
         // Refresh token call (Directly use axios to avoid interceptor loop)
         const { data } = await axios.post(`${API_URL}${ENDPOINTS.REFRESH_TOKEN}`, {}, { withCredentials: true });
         
-        // Agar response mein naya token mil raha hai (Headers ke liye)
+        // Store the new access token in Redux for direct backend requests
         const newToken = data?.data?.accessToken;
+        if (newToken) {
+          store.dispatch(setAccessToken(newToken));
+        }
         
         processQueue(null, newToken);
         return api(originalRequest);

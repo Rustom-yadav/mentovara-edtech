@@ -10,20 +10,26 @@ import {
   login as loginAction,
   logout as logoutAction,
   setUser,
+  setAccessToken,
   setLoading,
 } from "@/store/slices/authSlice";
 
 export function useAuth() {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { user, isAuthenticated, loading } = useSelector((s) => s.auth);
+  const { user, isAuthenticated, loading, accessToken } = useSelector((s) => s.auth);
 
   // Hydrate session from cookie on app boot
   const checkAuth = useCallback(async () => {
     try {
       dispatch(setLoading(true));
       const res = await api.get(ENDPOINTS.PROFILE);
-      dispatch(setUser(res.data?.data));
+      const data = res.data?.data;
+      // Profile now returns { user, accessToken }
+      dispatch(setUser(data?.user ?? data));
+      if (data?.accessToken) {
+        dispatch(setAccessToken(data.accessToken));
+      }
     } catch {
       dispatch(logoutAction());
     } finally {
@@ -53,7 +59,8 @@ export function useAuth() {
         }
 
         const userData = res.data?.data?.user;
-        dispatch(loginAction(userData));
+        const token = res.data?.data?.accessToken;
+        dispatch(loginAction({ user: userData, accessToken: token }));
         toast.success("Logged in successfully!");
         
         if (redirectTo && typeof redirectTo === "string") {
@@ -182,6 +189,7 @@ export function useAuth() {
 
   return {
     user,
+    accessToken,
     isAuthenticated,
     loading,
     isInstructor: user?.role === "instructor",
