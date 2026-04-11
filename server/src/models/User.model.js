@@ -3,77 +3,84 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const userSchema = new Schema(
-    {
-        fullName: {
-            type: String,
-            required: [true, "Full name is required"],
-            trim: true,
-        },
-        username: {
-            type: String,
-            required: [true, "Username is required"],
-            unique: true,
-            lowercase: true,
-            trim: true,
-            index: true,
-        },
-        email: {
-            type: String,
-            required: [true, "Email is required"],
-            unique: true,
-            lowercase: true,
-            trim: true,
-            index: true,
-        },
-        password: {
-            type: String,
-            required: [true, "Password is required"],
-            minlength: [8, "Password must be at least 8 characters"],
-            select: false,
-        },
-        avatar: {
-            type: String, // Cloudinary URL
-            default: "",
-        },
-        avatarPublicId: {
-            type: String, // Cloudinary public ID
-            default: "",
-        },
-        role: {
-            type: String,
-            enum: ["student", "instructor"],
-            default: "student",
-        },
-        isEmailVerified: {
-            type: Boolean,
-            default: false,
-        },
-        emailVerificationOTP: {
-            type: String, // Stored encrypted or as-is purely (we'll hash it before saving ideally, or just store the plain string if it's securely generated and short-lived, let's keep it simple for now)
-            select: false,
-        },
-        emailVerificationOTPExpiry: {
-            type: Date,
-            select: false,
-        },
-        enrolledCourses: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Course",
-            },
-        ],
-        watchHistory: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Video",
-            },
-        ],
-        refreshToken: {
-            type: String, // stored hashed refresh token
-            select: false,
-        },
+  {
+    fullName: {
+      type: String,
+      required: [true, "Full name is required"],
+      trim: true,
     },
-    { timestamps: true }
+    username: {
+      type: String,
+      required: [true, "Username is required"],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [8, "Password must be at least 8 characters"],
+      select: false,
+    },
+    avatar: {
+      type: String, // Cloudinary URL
+      default: "",
+    },
+    avatarPublicId: {
+      type: String, // Cloudinary public ID
+      default: "",
+    },
+    role: {
+      type: String,
+      enum: ["student", "instructor"],
+      default: "student",
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationOTP: {
+      type: String, // Stored encrypted or as-is purely (we'll hash it before saving ideally, or just store the plain string if it's securely generated and short-lived, let's keep it simple for now)
+      select: false,
+    },
+    emailVerificationOTPExpiry: {
+      type: Date,
+      select: false,
+    },
+    enrolledCourses: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Course",
+      },
+    ],
+    watchHistory: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Video",
+      },
+    ],
+    refreshToken: {
+      type: String, // stored hashed refresh token
+      select: false,
+    },
+    
+    payments: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Payment",
+      },
+    ],
+  },
+  { timestamps: true },
 );
 
 // Hash password before saving
