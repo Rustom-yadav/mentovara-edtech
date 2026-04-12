@@ -254,6 +254,18 @@ const deleteCourse = asyncHandler(async (req, res) => {
 const enrollInCourse = asyncHandler(async (req, res) => {
     const { courseId } = req.params;
 
+    // 1. Verify course existence and check if it's paid
+    const course = await Course.findById(courseId);
+    if (!course) {
+        throw new ApiError(404, "Course not found");
+    }
+
+    // Secure checking: If price is set and greater than 0, block direct enrollment
+    if (course.price > 0) {
+        throw new ApiError(400, "This is a paid course. Please use the payment gateway to enroll.");
+    }
+
+    // 2. Add course to user's enrolled list safely (avoid duplicates)
     const updatedUser = await User.findOneAndUpdate(
         {
             _id: req.user._id,
@@ -269,19 +281,11 @@ const enrollInCourse = asyncHandler(async (req, res) => {
         throw new ApiError(400, "You are already enrolled in this course");
     }
 
-    // Increment count + verify course exists in one call
-    const course = await Course.findByIdAndUpdate(
+    // 3. Increment enrolled count safely
+    await Course.findByIdAndUpdate(
         courseId,
         { $inc: { enrolledStudents: 1 } }
     );
-
-    if (!course) {
-        // Rollback enrollment if course doesn't exist
-        await User.findByIdAndUpdate(req.user._id, {
-            $pull: { enrolledCourses: courseId }
-        });
-        throw new ApiError(404, "Course not found");
-    }
 
     return res.status(200).json(new ApiResponse(200, {}, "Successfully enrolled in the course"));
 });

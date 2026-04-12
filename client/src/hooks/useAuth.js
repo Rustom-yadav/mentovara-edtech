@@ -181,7 +181,8 @@ export function useAuth() {
   const refreshUser = useCallback(async () => {
     try {
       const res = await api.get(ENDPOINTS.PROFILE);
-      dispatch(setUser(res.data?.data));
+      const data = res.data?.data;
+      dispatch(setUser(data?.user ?? data));
     } catch {
       // silently fail
     }

@@ -105,15 +105,15 @@ export default function ManageCoursePage() {
           },
           withCredentials: true, // fallback: send cookies if same-origin
           timeout: 5 * 60 * 1000, // 5 minutes for large video uploads
-        }
+        },
       );
       const newVideo = res.data?.data;
       setSections((prev) =>
         prev.map((s) =>
           s._id === sectionId
             ? { ...s, videos: [...(s.videos || []), newVideo] }
-            : s
-        )
+            : s,
+        ),
       );
       toast.success("Video uploaded");
     } catch (err) {
@@ -132,8 +132,8 @@ export default function ManageCoursePage() {
         prev.map((s) =>
           s._id === sectionId
             ? { ...s, videos: s.videos.filter((v) => v._id !== videoId) }
-            : s
-        )
+            : s,
+        ),
       );
       toast.success("Video deleted");
     } catch {
@@ -264,9 +264,7 @@ export default function ManageCoursePage() {
                       variant="ghost"
                       size="icon-xs"
                       className="text-destructive hover:text-destructive"
-                      onClick={() =>
-                        handleDeleteVideo(video._id, section._id)
-                      }
+                      onClick={() => handleDeleteVideo(video._id, section._id)}
                     >
                       <Trash2 className="size-3" />
                     </Button>
