@@ -38,6 +38,10 @@ export const ENDPOINTS = {
   PROGRESS: (courseId) => `/progress/${courseId}`,
   MARK_COMPLETE: "/progress/complete",
 
+  // Payments
+  INITIATE_PAYMENT: "/payments/initiate",
+  VERIFY_PAYMENT: "/payments/verify",
+
   // Health
   HEALTH: "/health",
 };
