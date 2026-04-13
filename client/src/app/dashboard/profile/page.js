@@ -1,73 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
 import { Camera, Loader2, Mail, User, GraduationCap } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/useAuth";
-import api from "@/services/api";
-import { ENDPOINTS } from "@/services/endpoints";
-import { useDispatch } from "react-redux";
-import { setUser } from "@/store/slices/authSlice";
-
-function getInitials(name) {
-  if (!name) return "U";
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
+import { useProfile } from "@/hooks/useProfile";
+import { getInitials } from "@/utilities";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
-  const dispatch = useDispatch();
-
-  const [fullName, setFullName] = useState(user?.fullName || "");
-  const [avatar, setAvatar] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [saving, setSaving] = useState(false);
-
-  function handleAvatarChange(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setAvatar(file);
-    setPreview(URL.createObjectURL(file));
-  }
-
-  async function handleSave(e) {
-    e.preventDefault();
-    if (!fullName.trim()) {
-      toast.error("Name cannot be empty");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const fd = new FormData();
-      fd.append("fullName", fullName.trim());
-      if (avatar) fd.append("avatar", avatar);
-
-      const res = await api.patch(ENDPOINTS.UPDATE_PROFILE, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      const updated = res.data?.data;
-      dispatch(setUser(updated));
-      toast.success("Profile updated!");
-      setAvatar(null);
-      setPreview(null);
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to update profile");
-    } finally {
-      setSaving(false);
-    }
-  }
+  const {
+    user,
+    fullName,
+    preview,
+    saving,
+    setFullName,
+    handleAvatarChange,
+    handleSave,
+  } = useProfile();
 
   return (
     <div className="section-container max-w-2xl py-10">

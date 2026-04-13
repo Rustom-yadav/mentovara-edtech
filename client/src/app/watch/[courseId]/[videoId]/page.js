@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   PlayCircle,
@@ -12,86 +11,25 @@ import {
   List,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import VideoPlayer from "@/components/video/VideoPlayer";
-import api from "@/services/api";
-import { ENDPOINTS } from "@/services/endpoints";
+import { useWatchCourse } from "@/hooks/useWatchCourse";
 
 export default function WatchPage() {
   const { courseId, videoId } = useParams();
-  const router = useRouter();
-
-  const [video, setVideo] = useState(null);
-  const [sections, setSections] = useState([]);
-  const [progress, setProgress] = useState({ completedVideos: [] });
-  const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Load video, sections, and progress in parallel
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [videoRes, sectionsRes, progressRes] = await Promise.all([
-        api.get(ENDPOINTS.VIDEO_BY_ID(videoId)),
-        api.get(ENDPOINTS.COURSE_SECTIONS(courseId)).catch(() => ({
-          data: { data: [] },
-        })),
-        api.get(ENDPOINTS.PROGRESS(courseId)).catch(() => ({
-          data: { data: { completedVideos: [] } },
-        })),
-      ]);
-      setVideo(videoRes.data?.data);
-      setSections(sectionsRes.data?.data || []);
-      setProgress(progressRes.data?.data || { completedVideos: [] });
-    } catch {
-      toast.error("Failed to load video");
-    } finally {
-      setLoading(false);
-    }
-  }, [videoId, courseId]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  // Mark current video as complete
-  async function markComplete() {
-    try {
-      await api.post(ENDPOINTS.MARK_COMPLETE, { courseId, videoId });
-      setProgress((prev) => ({
-        ...prev,
-        completedVideos: [...new Set([...prev.completedVideos, videoId])],
-      }));
-      toast.success("Marked as complete!");
-
-      // Auto-navigate to next video
-      const nextVideo = getNextVideo();
-      if (nextVideo) {
-        router.push(`/watch/${courseId}/${nextVideo._id}`);
-      }
-    } catch {
-      toast.error("Failed to mark as complete");
-    }
-  }
-
-  // Find the next video in curriculum order
-  function getNextVideo() {
-    const allVideos = sections.flatMap((s) => s.videos || []);
-    const currentIdx = allVideos.findIndex((v) => v._id === videoId);
-    return currentIdx >= 0 && currentIdx < allVideos.length - 1
-      ? allVideos[currentIdx + 1]
-      : null;
-  }
-
-  const isCompleted = progress.completedVideos?.includes(videoId);
-  const allVideos = sections.flatMap((s) => s.videos || []);
-  const totalVideos = allVideos.length;
-  const completedCount = allVideos.filter((v) =>
-    progress.completedVideos?.includes(v._id)
-  ).length;
-  const progressPercent =
-    totalVideos > 0 ? Math.round((completedCount / totalVideos) * 100) : 0;
+  const {
+    video,
+    sections,
+    progress,
+    loading,
+    sidebarOpen,
+    isCompleted,
+    progressPercent,
+    completedCount,
+    totalVideos,
+    toggleSidebar,
+    markComplete,
+  } = useWatchCourse(courseId, videoId);
 
   if (loading) {
     return (
@@ -156,7 +94,7 @@ export default function WatchPage() {
                 variant="outline"
                 size="sm"
                 className="lg:hidden"
-                onClick={() => setSidebarOpen(true)}
+                onClick={() => toggleSidebar(true)}
               >
                 <List className="size-4" data-icon="inline-start" />
                 Curriculum
@@ -210,7 +148,7 @@ export default function WatchPage() {
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <div
             className="absolute inset-0 bg-black/50"
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => toggleSidebar(false)}
           />
           <aside className="relative ml-auto w-80 max-w-[85vw] overflow-y-auto bg-card shadow-xl">
             <div className="sticky top-0 flex items-center justify-between border-b border-border bg-card px-4 py-3">
@@ -218,7 +156,7 @@ export default function WatchPage() {
               <Button
                 variant="ghost"
                 size="icon-xs"
-                onClick={() => setSidebarOpen(false)}
+                onClick={() => toggleSidebar(false)}
               >
                 <X className="size-4" />
               </Button>
@@ -229,7 +167,7 @@ export default function WatchPage() {
               currentVideoId={videoId}
               completedVideos={progress.completedVideos || []}
               progressPercent={progressPercent}
-              onNavigate={() => setSidebarOpen(false)}
+              onNavigate={() => toggleSidebar(false)}
             />
           </aside>
         </div>

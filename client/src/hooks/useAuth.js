@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import api from "@/services/api";
 import { ENDPOINTS } from "@/services/endpoints";
+import { buildVerifyUrl } from "@/utilities";
 import {
   login as loginAction,
   logout as logoutAction,
@@ -50,10 +51,7 @@ export function useAuth() {
         if (res.data?.data?.isEmailVerified === false) {
           const userEmail = res.data.data.email;
           toast.error("Please verify your email first.");
-          let verifyUrl = `/auth/verify-email?email=${encodeURIComponent(userEmail)}`;
-          if (redirectTo && typeof redirectTo === "string") {
-            verifyUrl += `&from=${redirectTo}`;
-          }
+          const verifyUrl = buildVerifyUrl(userEmail, redirectTo);
           router.push(verifyUrl);
           return { success: false, message: res.data?.message };
         }
@@ -78,10 +76,7 @@ export function useAuth() {
         if (status === 403 && data?.data?.isEmailVerified === false) {
           const userEmail = data.data.email;
           toast.error("Please verify your email first.");
-          let verifyUrl = `/auth/verify-email?email=${encodeURIComponent(userEmail)}`;
-          if (redirectTo && typeof redirectTo === "string") {
-            verifyUrl += `&from=${redirectTo}`;
-          }
+          const verifyUrl = buildVerifyUrl(userEmail, redirectTo);
           router.push(verifyUrl);
           return { success: false, message: msg };
         }
@@ -114,11 +109,7 @@ export function useAuth() {
         toast.success("Account created successfully! Please verify your email.");
         
         const userEmail = formData instanceof FormData ? formData.get("email") : formData.email;
-        let verifyUrl = `/auth/verify-email?email=${encodeURIComponent(userEmail)}`;
-        
-        if (redirectTo && typeof redirectTo === "string") {
-          verifyUrl += `&from=${redirectTo}`;
-        }
+        const verifyUrl = buildVerifyUrl(userEmail, redirectTo);
         router.push(verifyUrl);
 
         return { success: true };

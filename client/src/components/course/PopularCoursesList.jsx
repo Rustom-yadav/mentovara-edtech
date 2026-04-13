@@ -46,8 +46,8 @@ export default function PopularCoursesList() {
           </div>
         </div>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {popularCourses.map((course) => (
-            <CourseCard key={course._id} course={course} />
+          {popularCourses.map((course, index) => (
+            <CourseCard key={course._id} course={course} index={index} />
           ))}
         </div>
       </div>

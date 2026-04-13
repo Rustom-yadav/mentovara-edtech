@@ -1,67 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import api from "@/services/api";
-import { ENDPOINTS } from "@/services/endpoints";
+import { useCreateCourse } from "@/hooks/useCreateCourse";
 
 export default function CreateCoursePage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    price: "",
-    isPublished: false,
-  });
-  const [thumbnail, setThumbnail] = useState(null);
-
-  function onChange(e) {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  }
-
-  async function onSubmit(e) {
-    e.preventDefault();
-    if (!form.title || !form.description) {
-      toast.error("Title and description are required");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const fd = new FormData();
-      fd.append("title", form.title);
-      fd.append("description", form.description);
-      if (form.price) fd.append("price", form.price);
-      fd.append("isPublished", form.isPublished);
-      if (thumbnail) fd.append("thumbnail", thumbnail);
-
-      const res = await api.post(ENDPOINTS.COURSES, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      const courseId = res.data?.data?._id;
-      toast.success("Course created!");
-      router.push(
-        courseId
-          ? `/dashboard/courses/${courseId}/manage`
-          : "/dashboard/courses"
-      );
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to create course");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const {
+    form,
+    loading,
+    thumbnail,
+    onChange,
+    onThumbnailChange,
+    onSubmit,
+    router,
+  } = useCreateCourse();
 
   return (
     <div className="section-container max-w-2xl py-10">
@@ -125,7 +79,7 @@ export default function CreateCoursePage() {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
+              onChange={onThumbnailChange}
             />
           </label>
         </div>

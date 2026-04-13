@@ -5,26 +5,32 @@ A modern EdTech platform where instructors create structured video courses and s
 **Built by Rustom** · [MIT License](./LICENSE)
 
 🔗 **Repo:** [GitHub Repository](https://github.com/Rustom-yadav/mentovara-edtech) 
-🌐 **Live:** [mentovara.vercel.app](https://mentovara.vercel.app)
+🌐 **Frontend:** [mentovara.vercel.app](https://mentovara.vercel.app)  
+🌐 **Backend API:** [mentovara-edtech-api.onrender.com](https://mentovara-edtech-api.onrender.com)
 
 ---
 
-## API Documentation
+## ✨ Key Features
 
-The complete API documentation is available via Postman. This collection includes all endpoints for course management, authentication, and user progress tracking.
-
-🔗 **Postman Collection:** [View API Documentation](https://vijayyadav-official-4892899.postman.co/workspace/Vijay-Yadav's-Workspace~b311eace-bf23-4c27-863a-47b64a5efa0e/collection/52621760-64117d9f-fdf1-4258-909e-a14d4b2458d0?action=share&source=copy-link&creator=52621760)
+- **🎓 Interactive Learning**: Watch high-quality video courses with real-time progress tracking.
+- **💳 Secure Payments**: Seamless course enrollment powered by **Razorpay** integration.
+- **📧 Email Verification**: Robust authentication with SMTP-based email verification using **Nodemailer**.
+- **👨‍🏫 Instructor Dashboard**: Comprehensive tools for instructors to create, manage, and track their courses.
+- **📁 Media Management**: Optimized image and video handling via **Cloudinary**.
+- **📱 Responsive UI**: A premium, modern interface built with **Next.js**, **Tailwind CSS**, and **Shadcn UI**.
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 | Layer    | Stack                          |
 | -------- | ------------------------------ |
-| Frontend | Next.js 16 (App Router), React 19, Tailwind CSS v4, Shadcn UI, Redux Toolkit, Axios |
-| Backend  | Node.js, Express 5, MongoDB, Mongoose |
-| Auth     | JWT (HTTP-only cookies)        |
-| Media    | Cloudinary (images & video)    |
+| **Frontend** | Next.js 16 (App Router), React 19, Tailwind CSS v4, Shadcn UI, Redux Toolkit, Axios |
+| **Backend**  | Node.js, Express 5, MongoDB, Mongoose |
+| **Payments** | Razorpay SDK |
+| **Email**    | Nodemailer (SMTP) |
+| **Auth**     | JWT (HTTP-only cookies) |
+| **Media**    | Cloudinary (images & video) |
 
 ---
 
@@ -47,9 +53,11 @@ Backend API (see [server/README.md](./server/README.md))
 
 ### Prerequisites
 
-- Node.js 18+
-- MongoDB (local or Atlas)
-- Cloudinary account (for uploads)
+- **Node.js**: version 20+ required
+- **MongoDB**: Local instance or Atlas URI
+- **Cloudinary**: Account for image/video hosting
+- **Razorpay**: Account and API keys (Key ID & Secret)
+- **SMTP**: Gmail App Password or other SMTP service for emails
 
 ### 1. Backend
 
@@ -88,21 +96,27 @@ App runs at `http://localhost:3000`.
 
 ---
 
-## Production checklist
+## 🚀 Production Checklist
 
-Before deploying:
+Before deploying to platforms like Vercel (Frontend) and Render/Railway (Backend):
 
-| Check | Where |
-| ----- | ----- |
-| Set `NEXT_PUBLIC_API_URL` to your live API URL | Client (e.g. Vercel env) |
-| Set `CORS_ORIGIN` to your frontend URL (e.g. `https://mentovara.vercel.app`) | Server `.env` |
-| Set `NODE_ENV=production` | Server (e.g. Railway/Render env) |
-| Use strong `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET` | Server `.env` |
-| MongoDB Atlas (or production DB) connection string in `MONGO_URI` | Server `.env` |
-| Cloudinary env vars set for production | Server `.env` |
+| Check | Requirement |
+| ----- | ----------- |
+| `NEXT_PUBLIC_BACKEND_URL` | Set to your live API URL (Client Env) |
+| `CORS_ORIGIN` | Set to your frontend URL (Server Env) |
+| `NODE_ENV` | Must be set to `production` |
+| `RAZORPAY_WEBHOOK_SECRET` | For secure payment verification |
+| `SMTP_*` Keys | Verify email sender configuration |
+| JWT Secrets | Use strong, random strings for production |
+| Database | Ensure MongoDB Atlas IP whitelist is updated |
 
-- **Client**: `npm run build` passes (already verified).
-- **Server**: Ensure the server is started with `npm start` and env vars are set in your host (Railway, Render, etc.).
+---
+
+## 📖 API Documentation
+
+The project includes a comprehensive API collection.
+
+🔗 **Postman Collection:** [View API Documentation](https://vijayyadav-official-4892899.postman.co/workspace/Vijay-Yadav's-Workspace~b311eace-bf23-4c27-863a-47b64a5efa0e/collection/52621760-64117d9f-fdf1-4258-909e-a14d4b2458d0?action=share&source=copy-link&creator=52621760)
 
 ---
 

@@ -49,6 +49,7 @@ export default function Navbar() {
               alt="Mentovara"
               width={120}
               height={72}
+              priority
               className="rounded-lg"
             />
             <span className="text-lg font-bold tracking-tight gradient-text">
@@ -83,6 +84,7 @@ export default function Navbar() {
             alt="Mentovara"
             width={100}
             height={100}
+            priority
             className="rounded-lg"
           />
           <span className="text-lg font-bold tracking-tight gradient-text">

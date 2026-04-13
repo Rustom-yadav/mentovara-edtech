@@ -32,6 +32,13 @@ api.interceptors.request.use((config) => {
   if (config.data instanceof FormData) {
     config.timeout = 0; // No timeout — wait for backend response
   }
+
+  // Inject Bearer Token from Redux state for every request
+  const token = store.getState().auth.accessToken;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   return config;
 });
 
@@ -42,7 +49,12 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Check if error is 401 and not a retry and not the refresh call itself
-    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== ENDPOINTS.REFRESH_TOKEN) {
+    if (
+      error.response?.status === 401 && 
+      !originalRequest._retry && 
+      originalRequest.url !== ENDPOINTS.REFRESH_TOKEN &&
+      originalRequest.url !== ENDPOINTS.PROFILE // Guest user on boot: profile fails, don't hammer with refresh
+    ) {
       
       if (isRefreshing) {
         // if already refreshing, queue the request

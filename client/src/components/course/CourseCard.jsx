@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Users, BookOpen } from "lucide-react";
 
-export default function CourseCard({ course }) {
+export default function CourseCard({ course, index = 0 }) {
   const {
     _id,
     title,
@@ -24,6 +24,7 @@ export default function CourseCard({ course }) {
               src={thumbnail}
               alt={title}
               fill
+              priority={index < 2}
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
@@ -56,6 +57,7 @@ export default function CourseCard({ course }) {
                   alt={instructor.fullName}
                   width={20}
                   height={20}
+                  style={{ height: "auto" }}
                   className="rounded-full"
                 />
               ) : (

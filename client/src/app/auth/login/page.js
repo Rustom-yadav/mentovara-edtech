@@ -1,38 +1,25 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/useAuth";
+import { useLoginForm } from "@/hooks/useLoginForm";
 
 function LoginForm() {
-  const { handleLogin, loading } = useAuth();
-  const searchParams = useSearchParams();
-  const from = searchParams.get("from");
-
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-
-  function onChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    if (error) setError("");
-  }
-
-  async function onSubmit(e) {
-    e.preventDefault();
-    if (!form.email || !form.password) {
-      setError("Please fill in all fields");
-      return;
-    }
-    const result = await handleLogin(form, from);
-    if (!result.success) setError(result.message);
-  }
+  const {
+    form,
+    loading,
+    error,
+    showPassword,
+    from,
+    onChange,
+    onSubmit,
+    togglePassword,
+  } = useLoginForm();
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
@@ -95,7 +82,7 @@ function LoginForm() {
                 <button
                   type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setShowPassword((v) => !v)}
+                  onClick={togglePassword}
                   tabIndex={-1}
                 >
                   {showPassword ? (

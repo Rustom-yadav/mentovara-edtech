@@ -1,147 +1,92 @@
-# Mentovara — Client (Frontend)
+# 🎓 Mentovara — High-Performance EdTech Frontend
 
-Next.js frontend for the Mentovara EdTech platform.
-
----
-
-## Tech Stack
-
-- **Framework:** Next.js 16 (App Router)
-- **UI:** React 19, Tailwind CSS v4, Shadcn UI
-- **State:** Redux Toolkit
-- **HTTP:** Axios (with credentials for cookies)
-- **Language:** JavaScript (no TypeScript)
+Mentovara is a premium, enterprise-grade learning management system frontend built with a **Zero-Logic Architecture**. It leverages **Next.js 16 (App Router)** and **React 19** to deliver a seamless, state-of-the-art educational experience.
 
 ---
 
-## Scripts
+## 🏗️ Architectural Excellence: Zero-Logic Pattern
 
-| Command         | Description                                       |
-| --------------- | ------------------------------------------------- |
-| `npm run dev`   | Start dev server (default: http://localhost:3000) |
-| `npm run build` | Production build                                  |
-| `npm run start` | Run production server                             |
-| `npm run lint`  | Run ESLint                                        |
+The project is engineered for long-term maintainability by separating concerns into three strictly decoupled layers. This ensures that UI components remain "dumb" (rendering only), while business logic remains "pure" (testable JS).
 
----
-
-## Environment
-
-Create `.env.local` in `client/`:
-
-```env
-# The internal proxy route (leave as /api for client components)
-NEXT_PUBLIC_INTERNAL_API_URL=/api
-
-# The actual destination of the backend (Render or Localhost)
-NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+```mermaid
+graph TD
+    A[UI Layer: src/app & src/components] -->|Invokes| B[Orchestration Layer: src/hooks]
+    B -->|Uses| C[Logic Layer: src/utilities]
+    B -->|Calls| D[Data Layer: src/services]
+    B -->|Dispatches| E[State Layer: src/store]
 ```
 
-- `NEXT_PUBLIC_BACKEND_URL` — Backend API base URL (no trailing `/api/v1`). Required for all API proxy calls.
-- `NEXT_PUBLIC_INTERNAL_API_URL` — Internal route used by Axios to trigger the Next.js rewrite.
+### 🧱 Layer Breakdown
+| Layer | Description | Rules |
+| :--- | :--- | :--- |
+| **Presentation** | `src/app` & `src/components` | No calculations. Use props and hooks only. |
+| **Orchestration** | `src/hooks` | Manage React state, effects, and API orchestration. |
+| **Pure Logic** | `src/utilities` | Pure JS functions for math, validation, and parsing. |
+| **Data Access** | `src/services` | Axios configuration, interceptors, and endpoint mapping. |
+| **Global State** | `src/store` | Redux Toolkit slices for cross-component data. |
 
 ---
 
-## Project Structure
+## 🛡️ Key Features & Engineering Highlights
 
-```
+- **⚡ Next.js 16 & Turbo**: Utilizing the latest App Router patterns for optimized routing and layout persistence.
+- **🎨 Tailwind CSS v4**: Ultra-modern, high-performance styling with zero-runtime overhead.
+- **🔐 Advanced Auth**: Multi-role (Student/Instructor) flow with SMTP-based email verification and failed-request-queueing in Axios interceptors.
+- **💸 Razorpay SDK**: Secure client-side payment orchestration with server-side signature verification.
+- **📽️ Video Lifecycle**: Custom player with auto-save progress tracking and direct-to-backend video streaming to bypass serverless limits.
+
+---
+
+## 📂 Targeted Directory Mapping
+
+```text
 client/
-├── public/
-│   └── temp/
 ├── src/
-│   ├── app/
-│   │   ├── globals.css
-│   │   ├── layout.js
-│   │   ├── not-found.js
-│   │   ├── page.js
-│   │   ├── auth/
-│   │   │   ├── login/
-│   │   │   │   └── page.js
-│   │   │   └── register/
-│   │   │       └── page.js
-│   │   ├── courses/
-│   │   │   ├── page.js
-│   │   │   └── [courseId]/
-│   │   │       └── page.js
-│   │   ├── dashboard/
-│   │   │   ├── page.js
-│   │   │   ├── courses/
-│   │   │   │   ├── page.js
-│   │   │   │   ├── new/
-│   │   │   │   │   └── page.js
-│   │   │   │   └── [courseId]/
-│   │   │   │       └── manage/
-│   │   │   │           └── page.js
-│   │   │   ├── enrolled/
-│   │   │   │   └── page.js
-│   │   │   ├── instructor/
-│   │   │   ├── profile/
-│   │   │   │   └── page.js
-│   │   │   ├── student/
-│   │   ├── watch/
-│   │   │   └── [courseId]/
-│   │   │       └── [videoId]/
-│   │   │           └── page.js
-│   ├── components/
-│   │   ├── common/
-│   │   │   ├── Features.jsx
-│   │   │   ├── FinalCTA.jsx
-│   │   │   ├── Footer.jsx
-│   │   │   ├── HeroSection.jsx
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── StepsSection.jsx
-│   │   │   ├── TeachCTA.jsx
-│   │   │   └── ThemeToggle.jsx
-│   │   ├── course/
-│   │   │   ├── CourseCard.jsx
-│   │   │   └── PopularCoursesList.jsx
-│   │   ├── providers/
-│   │   │   ├── AuthProvider.jsx
-│   │   │   └── StoreProvider.jsx
-│   │   ├── ui/
-│   │   │   ├── avatar.jsx
-│   │   │   ├── button.jsx
-│   │   │   ├── card.jsx
-│   │   │   ├── input.jsx
-│   │   │   ├── label.jsx
-│   │   │   ├── separator.jsx
-│   │   │   └── sonner.jsx
-│   │   ├── video/
-│   │   │   └── VideoPlayer.jsx
-│   ├── hooks/
-│   │   └── useAuth.js
-│   ├── lib/
-│   │   └── utils.js
-│   ├── services/
-│   │   ├── api.js
-│   │   └── endpoints.js
-│   ├── store/
-│   │   ├── store.js
-│   │   └── slices/
-│   │       ├── authSlice.js
-│   │       └── courseSlice.js
-│   ├── utils/
-│   │   └── .gitkeep
-│   └── proxy.js
-├── components.json
-├── eslint.config.mjs
-├── jsconfig.json
-├── next.config.mjs
-├── package.json
-├── postcss.config.mjs
-└── README.md
+│   ├── app/                # 🚀 ROUTES: Unified Next.js Pages & Layouts
+│   │   ├── auth/           # Login, Register, & OTP Verification
+│   │   ├── dashboard/      # Role-based secure views (Instructor/Student)
+│   │   └── watch/          # Immersive Video Learning environment
+│   ├── hooks/              # ⚓ HOOKS: 13 specialized hooks for state & logic
+│   │   ├── useAuth.js      # Global Auth & Role orchestration
+│   │   ├── useRazorpay.js  # Dynamic SDK loading & Payment flow
+│   │   └── useWatchCourse.js# Video progress & synchronization
+│   ├── utilities/          # 🧠 PURE LOGIC: Centralized Business Rules
+│   │   ├── auth-utils.js   # Dynamic URL building & guard logic
+│   │   ├── file-utils.js   # FormData orchestration & validation
+│   │   └── index.js        # The official "Barrel File" for logic exports
+│   ├── services/           # 🔌 SERVICES: API instance & Interceptors
+│   ├── store/              # 📦 STATE: Redux Toolkit (Auth/Course domains)
+│   └── lib/                # 🛠️ LOW-LEVEL: Design system primitives (CN)
+└── proxy.js                # 🔄 PROXY: Integrated development API bridge
 ```
 
 ---
 
-## Running with the backend
+## ⚙️ Development Standard Operating Procedures (SOP)
 
-1. Start the **server** first (see root [README.md](../README.md) or `server/README.md`).
-2. Set `NEXT_PUBLIC_BACKEND_URL` in `client/.env.local` to the backend server URL.
-3. Run `npm run dev` in `client/`.
+### 1. Adding New Logic
+**NEVER** write logic inside components.
+1. Create a pure function in `src/utilities/<module>.js`.
+2. Export it via `src/utilities/index.js`.
+3. Consume it inside a hook or component.
+
+### 2. API Communication
+1. Define the endpoint string in `src/services/endpoints.js`.
+2. Use the `api` instance from `src/services/api.js`.
+3. Wrap the call in a custom hook inside `src/hooks/`.
+
+### 3. State Updates
+- For UI-only state: Use `useState` within a custom hook.
+- For Global state (User/Enrollments): Use `dispatch` to `authSlice` or `courseSlice`.
 
 ---
 
-## License
+## 🚀 Getting Started
 
-MIT — see [LICENSE](../LICENSE).
+1. **Install Dependencies**: `npm install`
+2. **Setup Env**: Create `.env.local` using `NEXT_PUBLIC_BACKEND_URL`.
+3. **Run Dev**: `npm run dev`
+4. **Audit**: `npm run lint`
+
+---
+**License**: MIT | **Author**: Rustom

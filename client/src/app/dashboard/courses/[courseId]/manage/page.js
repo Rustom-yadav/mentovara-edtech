@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { useSelector } from "react-redux";
 import Link from "next/link";
 import {
   Plus,
@@ -19,127 +17,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import api from "@/services/api";
-import { ENDPOINTS, DIRECT_API_URL } from "@/services/endpoints";
-import axios from "axios";
+import { useManageCourse } from "@/hooks/useManageCourse";
+import { useState } from "react";
 
 export default function ManageCoursePage() {
   const { courseId } = useParams();
-  const accessToken = useSelector((s) => s.auth.accessToken);
-
-  const [course, setCourse] = useState(null);
-  const [sections, setSections] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Form states
-  const [newSectionTitle, setNewSectionTitle] = useState("");
-  const [addingSectionLoading, setAddingSectionLoading] = useState(false);
-  const [uploadingVideoFor, setUploadingVideoFor] = useState(null);
-
-  const loadData = useCallback(async () => {
-    try {
-      const [courseRes, sectionsRes] = await Promise.all([
-        api.get(ENDPOINTS.COURSE_BY_ID(courseId)),
-        api.get(ENDPOINTS.COURSE_SECTIONS(courseId)).catch(() => ({
-          data: { data: [] },
-        })),
-      ]);
-      setCourse(courseRes.data?.data);
-      setSections(sectionsRes.data?.data || []);
-    } catch {
-      toast.error("Failed to load course");
-    } finally {
-      setLoading(false);
-    }
-  }, [courseId]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  // Add a new section
-  async function handleAddSection(e) {
-    e.preventDefault();
-    if (!newSectionTitle.trim()) return;
-
-    setAddingSectionLoading(true);
-    try {
-      const res = await api.post(ENDPOINTS.ADD_SECTION(courseId), {
-        title: newSectionTitle.trim(),
-      });
-      setSections((prev) => [...prev, res.data?.data]);
-      setNewSectionTitle("");
-      toast.success("Section added");
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to add section");
-    } finally {
-      setAddingSectionLoading(false);
-    }
-  }
-
-  // Delete a section
-  async function handleDeleteSection(sectionId) {
-    if (!confirm("Delete this section and all its videos?")) return;
-    try {
-      await api.delete(ENDPOINTS.SECTION_BY_ID(sectionId));
-      setSections((prev) => prev.filter((s) => s._id !== sectionId));
-      toast.success("Section deleted");
-    } catch {
-      toast.error("Failed to delete section");
-    }
-  }
-
-  // Upload video to a section
-  // Uses direct backend URL to bypass Next.js proxy body size limit (~4.5MB)
-  async function handleUploadVideo(sectionId, formData) {
-    setUploadingVideoFor(sectionId);
-    try {
-      formData.append("section", sectionId);
-      const res = await axios.post(
-        `${DIRECT_API_URL}${ENDPOINTS.VIDEOS}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-          },
-          withCredentials: true, // fallback: send cookies if same-origin
-          timeout: 5 * 60 * 1000, // 5 minutes for large video uploads
-        },
-      );
-      const newVideo = res.data?.data;
-      setSections((prev) =>
-        prev.map((s) =>
-          s._id === sectionId
-            ? { ...s, videos: [...(s.videos || []), newVideo] }
-            : s,
-        ),
-      );
-      toast.success("Video uploaded");
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to upload video");
-    } finally {
-      setUploadingVideoFor(null);
-    }
-  }
-
-  // Delete a video
-  async function handleDeleteVideo(videoId, sectionId) {
-    if (!confirm("Delete this video?")) return;
-    try {
-      await api.delete(ENDPOINTS.VIDEO_BY_ID(videoId));
-      setSections((prev) =>
-        prev.map((s) =>
-          s._id === sectionId
-            ? { ...s, videos: s.videos.filter((v) => v._id !== videoId) }
-            : s,
-        ),
-      );
-      toast.success("Video deleted");
-    } catch {
-      toast.error("Failed to delete video");
-    }
-  }
+  const {
+    course,
+    sections,
+    loading,
+    newSectionTitle,
+    addingSectionLoading,
+    uploadingVideoFor,
+    setNewSectionTitle,
+    handleAddSection,
+    handleDeleteSection,
+    handleUploadVideo,
+    handleDeleteVideo,
+  } = useManageCourse(courseId);
 
   if (loading) {
     return (
@@ -294,15 +189,7 @@ function VideoUploadForm({ sectionId, isUploading, onUpload }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!title.trim() || !file) {
-      toast.error("Video title and file are required");
-      return;
-    }
-    const fd = new FormData();
-    fd.append("title", title.trim());
-    fd.append("video", file);
-
-    await onUpload(sectionId, fd);
+    await onUpload(sectionId, { title, video: file });
     setTitle("");
     setFile(null);
   }

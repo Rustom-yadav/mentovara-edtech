@@ -1,85 +1,30 @@
 "use client";
 
-import { useState, Suspense, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Loader2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/useAuth";
+import { useRegisterForm } from "@/hooks/useRegisterForm";
 
 function RegisterForm() {
-  const { handleRegister, loading } = useAuth();
-  const searchParams = useSearchParams();
-  const from = searchParams.get("from");
-
-  const [form, setForm] = useState({
-    fullName: "",
-    username: "",
-    email: "",
-    password: "",
-    role: "student",
-  });
-  const [avatar, setAvatar] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const fileInputRef = useRef(null);
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        setError("Image size should be less than 2MB");
-        return;
-      }
-      setAvatar(file);
-      setAvatarPreview(URL.createObjectURL(file));
-      setError("");
-    }
-  };
-
-  const removeAvatar = () => {
-    setAvatar(null);
-    setAvatarPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  function onChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    if (error) setError("");
-  }
-
-  async function onSubmit(e) {
-    e.preventDefault();
-    if (!form.fullName || !form.username || !form.email || !form.password) {
-      setError("Please fill in all fields");
-      return;
-    }
-    if (form.password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-
-    let submitData = form;
-
-    if (avatar) {
-      submitData = new FormData();
-      submitData.append("fullName", form.fullName);
-      submitData.append("username", form.username);
-      submitData.append("email", form.email);
-      submitData.append("password", form.password);
-      submitData.append("role", form.role);
-      submitData.append("avatar", avatar);
-    }
-
-    const result = await handleRegister(submitData, from);
-    if (!result.success) setError(result.message);
-  }
+  const {
+    form,
+    loading,
+    error,
+    showPassword,
+    avatarPreview,
+    fileInputRef,
+    from,
+    onChange,
+    onSubmit,
+    togglePassword,
+    handleAvatarChange,
+    removeAvatar,
+    setRole,
+  } = useRegisterForm();
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
@@ -89,7 +34,7 @@ function RegisterForm() {
         <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
       </div>
 
-      <div className="relative w-full max-w-md space-y-8">
+      <div className="relative w-full max-md space-y-8">
         {/* Header */}
         <div className="flex flex-col items-center text-center">
           <Link href="/" className="mb-6 flex items-center gap-2">
@@ -224,7 +169,7 @@ function RegisterForm() {
                 <button
                   type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setShowPassword((v) => !v)}
+                  onClick={togglePassword}
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -242,9 +187,7 @@ function RegisterForm() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() =>
-                    setForm((prev) => ({ ...prev, role: "student" }))
-                  }
+                  onClick={() => setRole("student")}
                   className={`rounded-xl border px-4 py-3 text-center text-sm font-medium transition-all ${
                     form.role === "student"
                       ? "border-primary bg-primary/10 text-primary"
@@ -256,9 +199,7 @@ function RegisterForm() {
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    setForm((prev) => ({ ...prev, role: "instructor" }))
-                  }
+                  onClick={() => setRole("instructor")}
                   className={`rounded-xl border px-4 py-3 text-center text-sm font-medium transition-all ${
                     form.role === "instructor"
                       ? "border-primary bg-primary/10 text-primary"

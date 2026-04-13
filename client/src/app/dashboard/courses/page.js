@@ -1,57 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Plus, BookOpen, Loader2, Trash2, Settings, Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import api from "@/services/api";
-import { ENDPOINTS } from "@/services/endpoints";
+import { useInstructorCourses } from "@/hooks/useInstructorCourses";
 
 export default function InstructorCoursesPage() {
-  const { user, isInstructor } = useAuth();
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadMyCourses() {
-      try {
-        const res = await api.get(ENDPOINTS.COURSES, {
-          params: { page: 1, limit: 100 },
-        });
-        const allCourses = res.data?.data?.docs || [];
-        const mine = allCourses.filter(
-          (c) =>
-            c.instructor?._id === user?._id || c.instructor === user?._id
-        );
-        setCourses(mine);
-      } catch (err) {
-        // Backend returns 404 when no published courses exist — that's OK
-        if (err?.response?.status !== 404) {
-          toast.error("Failed to load your courses");
-        }
-        setCourses([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (user?._id) loadMyCourses();
-  }, [user?._id]);
-
-  async function handleDelete(courseId) {
-    if (!confirm("Are you sure? This will permanently delete the course and all its content."))
-      return;
-    try {
-      await api.delete(ENDPOINTS.COURSE_BY_ID(courseId));
-      setCourses((prev) => prev.filter((c) => c._id !== courseId));
-      toast.success("Course deleted");
-    } catch {
-      toast.error("Failed to delete course");
-    }
-  }
+  const { courses, loading, isInstructor, handleDelete } = useInstructorCourses();
 
   if (!isInstructor) {
     return (

@@ -1,40 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { BookOpen, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import CourseCard from "@/components/course/CourseCard";
-import { useAuth } from "@/hooks/useAuth";
-import api from "@/services/api";
-import { ENDPOINTS } from "@/services/endpoints";
+import { useEnrolledCourses } from "@/hooks/useEnrolledCourses";
 import Link from "next/link";
 
 export default function EnrolledCoursesPage() {
-  const { user } = useAuth();
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadEnrolled() {
-      if (!user?.enrolledCourses?.length) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const results = await Promise.all(
-          user.enrolledCourses.map((id) =>
-            api.get(ENDPOINTS.COURSE_BY_ID(id)).then((r) => r.data?.data),
-          ),
-        );
-        setCourses(results.filter(Boolean));
-      } catch {
-        toast.error("Failed to load enrolled courses");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadEnrolled();
-  }, [user?.enrolledCourses]);
+  const { courses, loading } = useEnrolledCourses();
 
   return (
     <div className="section-container py-10">
