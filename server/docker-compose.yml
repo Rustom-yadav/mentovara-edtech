@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  server:
+    build: .
+    container_name: mentovara-server
+    restart: on-failure
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+      # Connect using internal network and auth credentials
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/?authSource=admin
+    env_file:
+      - .env
+    depends_on:
+      mongodb:
+        condition: service_healthy # Will NOT start server until DB is fully ready
+    networks:
+      - mentovara-network
+
+  mongodb:
+    image: mongo:7.0 # Pinned version, NEVER use 'latest' in production
+    container_name: mentovara-mongo
+    restart: always
+    environment:
+      # Secure DB with authentication (Add these to your .env file)
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "127.0.0.1:27017:27017" # Binds to localhost only, NOT public internet
+    volumes:
+      - mentovara-mongo-data:/data/db
+    networks:
+      - mentovara-network
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "$MONGO_INITDB_ROOT_USERNAME", "-p", "$MONGO_INITDB_ROOT_PASSWORD", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+networks:
+  mentovara-network:
+    driver: bridge
+
+volumes:
+  mentovara-mongo-data:
