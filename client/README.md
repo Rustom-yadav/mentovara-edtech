@@ -34,6 +34,7 @@ graph TD
 - **🔐 Advanced Auth**: Multi-role (Student/Instructor) flow with SMTP-based email verification and failed-request-queueing in Axios interceptors.
 - **💸 Razorpay SDK**: Secure client-side payment orchestration with server-side signature verification.
 - **📽️ Video Lifecycle**: Custom player with auto-save progress tracking and direct-to-backend video streaming to bypass serverless limits.
+- **🧩 100% Component Modularity**: Complex page logic extracted into dedicated micro-components (`VideoUploadForm`, `CourseSidebar`) for supreme code readability.
 
 ---
 

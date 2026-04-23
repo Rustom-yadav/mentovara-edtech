@@ -13,6 +13,7 @@ The Mentovara Backend is a robust, production-ready REST API built with **Expres
 - **Payments:** Razorpay Node.js SDK (Signature Verification enabled)
 - **Media Optimization:** Multer + Cloudinary (Optimized for large video streams)
 - **Email Engine:** Nodemailer + SMTP (Gmail App Passwords)
+- **Containerization:** Docker & Docker Compose (Isolated, Production-Ready)
 
 ---
 
@@ -97,7 +98,11 @@ Automated video handling via **Cloudinary API**, including thumbnail generation 
 Configured with `http.createServer` and custom `rawBody` capture to support large video uploads and secure webhook verification on serverless-platforms like Render.
 
 ### 4. Global Error Resilience
-Centralized `ApiError` class and `errorHandler` middleware ensure that the client always receives descriptive, structured error responses instead of raw stack traces.
+Centralized `ApiError` class and `errorHandler` middleware ensure that the client always receives descriptive, structured error responses instead of raw stack traces. The `asyncHandler` pattern prevents double try-catch silent failures.
+
+### 5. Enterprise-Grade Security
+- **Cryptographically Secure OTPs:** Generated via Node's `crypto` module.
+- **Strict Ownership Validation:** Instructors can only modify or delete content (videos/sections) within their explicitly owned courses, preventing unauthorized data manipulation.
 
 ---
 
@@ -111,10 +116,18 @@ Centralized `ApiError` class and `errorHandler` middleware ensure that the clien
 2. **Database Initialization**: 
    Ensure your MongoDB instance is running (Local or Atlas).
 
-3. **Development Mode**:
+3. **Development Mode (Manual)**:
    ```bash
    npm run dev
    ```
+
+### 🐳 Run with Docker (Recommended)
+You can run the entire backend + a local isolated MongoDB instantly:
+```bash
+docker-compose up -d --build
+```
+- The API will be available at `http://localhost:8000`
+- MongoDB will be secured with authentication and mapped to port `27017` internally.
 
 ---
 **License**: MIT | **Author**: Rustom | **Audit Grade**: 100% Purity

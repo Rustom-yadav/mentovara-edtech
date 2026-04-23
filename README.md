@@ -31,6 +31,7 @@ A modern EdTech platform where instructors create structured video courses and s
 | **Email**    | Nodemailer (SMTP) |
 | **Auth**     | JWT (HTTP-only cookies) |
 | **Media**    | Cloudinary (images & video) |
+| **DevOps**   | Docker & Docker Compose (Containerized Backend) |
 
 ---
 
@@ -66,6 +67,12 @@ cd server
 cp .env.example .env   # edit with your MongoDB, JWT, Cloudinary keys
 npm install
 npm run dev
+```
+
+**Alternative: Run Backend with Docker (Recommended for Dev/Test)**
+```bash
+cd server
+docker-compose up -d --build
 ```
 
 API runs at `http://localhost:8000` (or the port in `.env`).
