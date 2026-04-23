@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   server:
     build: .
@@ -34,7 +32,17 @@ services:
     networks:
       - mentovara-network
     healthcheck:
-      test: ["CMD", "mongosh", "-u", "$MONGO_INITDB_ROOT_USERNAME", "-p", "$MONGO_INITDB_ROOT_PASSWORD", "--eval", "db.adminCommand('ping')"]
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "-u",
+          "$MONGO_INITDB_ROOT_USERNAME",
+          "-p",
+          "$MONGO_INITDB_ROOT_PASSWORD",
+          "--eval",
+          "db.adminCommand('ping')",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -1,0 +1,40 @@
+name: Client CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'client/**' # Only trigger if files in the client directory change
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'client/**'
+
+jobs:
+  check-client:
+    runs-on: ubuntu-latest
+    
+    # Execute all subsequent commands inside the 'client' directory
+    defaults:
+      run:
+        working-directory: ./client
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: './client/package-lock.json'
+    
+    - name: Install Dependencies
+      run: npm ci
+      
+    - name: Run ESLint
+      run: npm run lint
+      
+    - name: Test Build (Verifies Vercel Deployment will succeed)
+      run: npm run build

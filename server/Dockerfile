@@ -7,20 +7,14 @@ ENV NODE_ENV=production
 # Set the working directory inside the container
 WORKDIR /app
 
-# Change ownership of /app to the built-in non-root 'node' user
-RUN chown -R node:node /app
-
-# Switch to the non-root user for security (Prevents container breakout attacks)
-USER node
-
 # Copy package.json and package-lock.json first to leverage Docker cache
-COPY --chown=node:node package*.json ./
+COPY package*.json ./
 
 # Install only production dependencies
 RUN npm ci --omit=dev
 
 # Copy the rest of the application code
-COPY --chown=node:node . .
+COPY . .
 
 # Ensure the temp directory for multer uploads exists
 RUN mkdir -p public/temp
