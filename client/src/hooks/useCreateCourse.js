@@ -59,6 +59,8 @@ export function useCreateCourse() {
     }
   };
 
+  const handleCancel = () => router.back();
+
   return {
     form,
     loading,
@@ -66,6 +68,6 @@ export function useCreateCourse() {
     onChange,
     onThumbnailChange,
     onSubmit,
-    router,
+    handleCancel,
   };
 }

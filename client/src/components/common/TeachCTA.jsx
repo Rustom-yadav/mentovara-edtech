@@ -72,8 +72,7 @@ export default function TeachCTA() {
                       <div className="flex-1">
                         <p className="text-sm font-medium">{title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {" "}
-                          $ lectures
+                          {i + 1} lecture{i !== 0 ? "s" : ""}
                         </p>
                       </div>
                       <Play className="size-4 text-muted-foreground" />
@@ -83,7 +82,7 @@ export default function TeachCTA() {
               </div>
               <div className="mt-4 flex items-center justify-between rounded-xl bg-primary/5 px-4 py-3">
                 <span className="text-xs font-medium text-primary">
-                  $ students enrolled
+                  120+ students enrolled
                 </span>
                 <span className="text-xs text-muted-foreground">Published</span>
               </div>

@@ -34,7 +34,7 @@ function RegisterForm() {
         <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
       </div>
 
-      <div className="relative w-full max-md space-y-8">
+      <div className="relative w-full max-w-md space-y-8">
         {/* Header */}
         <div className="flex flex-col items-center text-center">
           <Link href="/" className="mb-6 flex items-center gap-2">

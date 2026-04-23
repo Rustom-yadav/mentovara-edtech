@@ -11,7 +11,7 @@ export function loadExternalScript(url, timeoutMs = 15000) {
     // Check if script already exists
     const existingScript = document.querySelector(`script[src="${url}"]`);
     if (existingScript) {
-      if (typeof window !== "undefined" && (window.Razorpay || existingScript.dataset.loaded === "true")) {
+      if (existingScript.dataset.loaded === "true") {
         clearTimeout(timeout);
         resolve(true);
       } else {

@@ -36,7 +36,7 @@ export function useVerifyEmail() {
     setError("");
     const result = await handleVerifyEmail(email, otp);
     if (result.success) {
-      router.push(`/auth/login${from ? `?from=${from}` : ""}`);
+      router.push(`/auth/login${from ? `?from=${encodeURIComponent(from)}` : ""}`);
     }
   };
 

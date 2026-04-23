@@ -14,7 +14,7 @@ export default function CreateCoursePage() {
     onChange,
     onThumbnailChange,
     onSubmit,
-    router,
+    handleCancel,
   } = useCreateCourse();
 
   return (
@@ -112,7 +112,7 @@ export default function CreateCoursePage() {
             type="button"
             variant="outline"
             size="lg"
-            onClick={() => router.back()}
+            onClick={handleCancel}
           >
             Cancel
           </Button>

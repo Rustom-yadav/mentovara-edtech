@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import api from "@/services/api";
 import { ENDPOINTS } from "@/services/endpoints";
 import { setUser } from "@/store/slices/authSlice";
 import { useAuth } from "@/hooks/useAuth";
-import { toFormData } from "@/utilities";
+import { toFormData, validateProfileForm } from "@/utilities";
 
 export function useProfile() {
   const { user } = useAuth();
@@ -18,6 +18,11 @@ export function useProfile() {
   const [preview, setPreview] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  // Sync fullName when user loads after initial render (e.g., slow auth)
+  useEffect(() => {
+    if (user?.fullName) setFullName(user.fullName);
+  }, [user?.fullName]);
+
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -27,8 +32,10 @@ export function useProfile() {
 
   const handleSave = async (e) => {
     if (e) e.preventDefault();
-    if (!fullName.trim()) {
-      toast.error("Name cannot be empty");
+
+    const validationError = validateProfileForm({ fullName });
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
 
@@ -36,7 +43,7 @@ export function useProfile() {
     try {
       const fd = toFormData({
         fullName: fullName.trim(),
-        avatar: avatar, // will only be appended if exists
+        avatar: avatar,
       });
 
       const res = await api.patch(ENDPOINTS.UPDATE_PROFILE, fd, {

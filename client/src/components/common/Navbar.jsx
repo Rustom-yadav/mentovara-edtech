@@ -10,21 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import ThemeToggle from "@/components/common/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
+import { getInitials } from "@/utilities";
 
 const PUBLIC_LINKS = [
   { href: "/", label: "Home", icon: Home },
   { href: "/courses", label: "Courses", icon: BookOpen },
 ];
 
-function getInitials(name) {
-  if (!name) return "U";
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 export default function Navbar() {
   const pathname = usePathname();
