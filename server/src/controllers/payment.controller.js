@@ -88,8 +88,8 @@ export const initiatePayment = asyncHandler(async (req, res) => {
         throw new ApiError(400, "This is a free course. Please use the direct enrollment endpoint.");
     }
 
-    // Check if already enrolled
-    if (req.user.enrolledCourses.includes(courseId)) {
+    // Check if already enrolled (compare as strings to avoid ObjectId vs string mismatch)
+    if (req.user.enrolledCourses.some((id) => id.toString() === courseId)) {
         throw new ApiError(400, "You are already enrolled in this course");
     }
 

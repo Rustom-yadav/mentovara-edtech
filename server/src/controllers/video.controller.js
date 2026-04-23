@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import Video from "../models/Video.model.js";
 import Section from "../models/Section.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import { checkOwnership } from "../utils/checkOwnership.js";
 import fs from "fs";
 
 
@@ -19,11 +20,18 @@ const addVideo = asyncHandler(async (req, res) => {
             throw new ApiError(400, "Title and section ID are required");
         }
         
-        const isValidSection = await Section.findById(section);
+        const isValidSection = await Section.findById(section).populate("course");
 
         if (!isValidSection) {
             throw new ApiError(404, "Section not found");
         }
+
+        // Verify the requesting instructor owns the course this section belongs to
+        checkOwnership(
+            isValidSection.course.instructor,
+            req.user._id,
+            "You are not authorized to add videos to this section"
+        );
 
         // 2. File check
         if (!videoLocalPath) {
@@ -85,11 +93,21 @@ const getVideo = asyncHandler(async (req, res) => {
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
 
-    const video = await Video.findById(videoId);
+    const video = await Video.findById(videoId).populate({
+        path: "section",
+        populate: { path: "course", select: "instructor" }
+    });
 
     if (!video) {
         throw new ApiError(404, "Video not found");
     }
+
+    // Verify the requesting instructor owns the course this video belongs to
+    checkOwnership(
+        video.section.course.instructor,
+        req.user._id,
+        "You are not authorized to delete this video"
+    );
 
     // Attempt to delete from Cloudinary
     if (video.publicId) {

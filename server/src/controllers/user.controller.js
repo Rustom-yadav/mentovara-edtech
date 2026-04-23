@@ -5,6 +5,7 @@ import User from "../models/User.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import fs from "fs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
 
 // Shared cookie options — DRY (used in login, logout, refresh)
@@ -54,7 +55,7 @@ const registerUser = asyncHandler(async (req, res) => {
             uploadedAvatarPublicId = avatar?.public_id;
         }
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otp = crypto.randomInt(100000, 999999).toString();
         const otpExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
         const user = await User.create({
@@ -328,7 +329,7 @@ const resendVerificationEmail = asyncHandler(async (req, res) => {
         return res.status(200).json(new ApiResponse(200, null, "Email is already verified"));
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = crypto.randomInt(100000, 999999).toString();
     const otpExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     user.emailVerificationOTP = otp;
